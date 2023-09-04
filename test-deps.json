@@ -1,0 +1,15 @@
+{
+  "spaceExp": {
+    "mods": {
+      "space-exploration": {
+        "version": "0.6.113",
+        "modroot": "mods/spex"
+      }
+    },
+    "computedlocale": "locales/SEprecomplocale.json",
+    "locales": {
+      "all": "locales/SElocaleall.json",
+      "en": "locales/en/SElocale.json"
+    }
+  }
+}
