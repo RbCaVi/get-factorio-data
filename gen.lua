@@ -56,6 +56,9 @@ end]]
 local modules={}
 
 function newrequire(requiredname)
+  if modules[requiredname] then
+    return modules[requiredname]
+  end
   local required=requiredname
 
   if required:match('/') then
