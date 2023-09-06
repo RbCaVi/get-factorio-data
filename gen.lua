@@ -447,3 +447,7 @@ for _,mod in ipairs(deps) do
 end
 
 -- dump to file
+local f=io.open('data.json','w')
+local data=json.encode(newenv.data.raw)
+f:write(data)
+f:close()
