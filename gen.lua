@@ -39,7 +39,7 @@ function scandir(directory)
 end
 
 -- http://lua-users.org/lists/lua-l/2010-06/msg00313.html
---[[setfenv = setfenv or function(f, t)
+setfenv = setfenv or function(f, t)
   f = (type(f) == 'function' and f or debug.getinfo(f + 1, 'f').func)
   local name
   local up = 0
@@ -51,14 +51,11 @@ end
     debug.upvaluejoin(f, up, function() return name end, 1) -- use unique upvalue
     debug.setupvalue(f, up, t)
   end
-end]]
+end
 
 local modules={}
 
 function newrequire(requiredname)
-  if modules[requiredname] then
-    return modules[requiredname]
-  end
   local required=requiredname
 
   if required:match('/') then
@@ -107,17 +104,23 @@ function newrequire(requiredname)
     end
   end
   
-  print('requiring',modsroot .. '/' .. modname:last() .. '/' .. filepath:last())
+  local result
+  local path=modsroot .. '/' .. modname:last() .. '/' .. filepath:last()
+  local mkey=path .. '@@' .. modname:last()
+  if false and modules[mkey] then
+    print('cached',path)
+    result=modules[mkey]
+  else
+    print('requiring',path)
+    local f,err=loadfile(path)
   
-  local f,err=loadfile(modsroot .. '/' .. modname:last() .. '/' .. filepath:last())
-  
-  if not f then print(err) end
-  
-  setfenv(f,newenv)
+    if not f then print(err) end
+    
+    setfenv(f,newenv)
 
-  local result=f()
-
-  modules[requiredname]=result
+    result=f()
+    modules[mkey]=result
+  end
 
   modname:pop()
   filepath:pop()
