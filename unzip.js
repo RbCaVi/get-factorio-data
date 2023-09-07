@@ -1,4 +1,4 @@
-var f=(url,contentroot,dest)=>new Promise((resolve,reject)=>
+var downloadunzip=(url,contentroot,dest)=>new Promise((resolve,reject)=>
   https.get(url, (res) => {
     const data = [];
     res.on('data', (chunk) => {
@@ -12,28 +12,37 @@ var f=(url,contentroot,dest)=>new Promise((resolve,reject)=>
       resolve(buffer);
     });
   }).on('error', (err) => { reject(['download error:', err]); })
-).then(buffer=>yauzl.openBuffer(buffer, {lazyEntries: true}, function(err, zipfile) {
-  if (err) throw err;
-  zipfile.readEntry();
-  zipfile.on("entry", function(entry) {
-    if (/\/$/.test(entry.fileName)) {
-      zipfile.readEntry();
-    } else {
-      // file entry
-      zipfile.openReadStream(entry, function(err, readStream) {
-        if (err) throw err;
-        if(!entry.fileName.startsWith(contentroot)){
+).then(buffer=>yauzl.fromBuffer(buffer, {lazyEntries: true}, function(err, zipfile) {
+  if (err) throw err;
+  let ncroot=path.normalize(contentroot);
+  let contentrootlength=ncroot.split(path.sep).length;
+  if(ncroot=='.'){
+    ncroot='';
+    contentrootlength=0;
+  }
+  zipfile.readEntry();
+  zipfile.on("entry", function(entry) {
+    if (/\/$/.test(entry.fileName)) {
+      zipfile.readEntry();
+    } else {
+      console.log(path.normalize(entry.fileName),ncroot);
+      if(!path.normalize(entry.fileName).startsWith(ncroot)){
+        zipfile.readEntry();
+        return;
+      }
+      const pathComponents = path.normalize(entry.fileName).split(path.sep);
+      const fname=path.join(...pathComponents.slice(contentrootlength));
+      // file entry
+      zipfile.openReadStream(entry, function(err, readStream) {
+        if (err) throw err;
+        readStream.on("end", function() {
           zipfile.readEntry();
-          return;
-        }
-        readStream.on("end", function() {
-          zipfile.readEntry();
-        });
-        fs.mkdirSync(location+path.dirname(, { recursive: true });
-        fs.createWriteStream(
-        readStream.pipe(somewhere);
-      });
-    }
-  });
+        });
+        fs.mkdirSync(path.join(dest,path.dirname(fname)), { recursive: true });
+        var stream=fs.createWriteStream(path.join(dest,fname));
+        readStream.pipe(stream);
+      });
+    }
+  });
 }));
 
