@@ -46,3 +46,10 @@ var downloadunzip=(url,contentroot,dest)=>new Promise((resolve,reject)=>
   });
 }));
 
+yauzl=require('yauzl');
+
+url='https://mods-storage.re146.dev/spaceexplorationdatachipaugmenter/1.1.0.zip';
+contentroot='spaceexplorationdatachipaugmenter_1.1.0';
+dest='/home/rvail/seauto/sitegen/mmmmmmmm';
+
+downloadunzip(url,contentroot,dest)
