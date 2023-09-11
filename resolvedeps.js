@@ -10,12 +10,14 @@ let initialVersions=new Map();
 for(let [mod,moddata] of Object.entries(pack.mods)){
   let version;
   if(moddata.version){
-    version=versionConstraint(moddata.version,mod,'__initial__');
+    version=versionConstraint('____ = '+moddata.version,mod,'__initial__');
   }else{
     version=anyVersion(mod,'__initial__');
   }
   initialVersions.set(mod,version);
 }
+
+
 
 let newVersions=initialVersions;
 let resolvedVersions=new Map();
@@ -41,7 +43,7 @@ function versionConstraint(version,mod,source) {
   let optional=false;
   switch(parts[0]){
   case '!':
-    return VersionConstraint.incompatible(mod,[source]);
+    return incompatible(mod,[source]);
   case '?':
   case '(?)':
     optional=true;
@@ -49,7 +51,36 @@ function versionConstraint(version,mod,source) {
     parts=parts.slice(1);
   default:
   }
-  return VersionConstraint.constraint(mod,[source],parts[2],parts[3],optional);
+  return constraint(mod,[source],parts[2],parts[3],optional);
+}
+
+function incompatible(mod,sources){
+  return new VersionConstraint(mod,sources,null,null,null,null,null,true);
+}
+
+function anyVersion(mod,sources){
+  return new VersionConstraint(mod,sources,null,null,null,null,true,false);
+}
+
+function constraint(mod,sources,ineq,version,optional){
+  let bottom=null;
+  let top=null;
+  let bottomExc=null;
+  let topExc=null;
+  if(ineq.contains('<')){
+    top=version;
+    topExc=!ineq.contains('=');
+  }else if(ineq.contains('>')){
+    bottom=version;
+    bottomExc=!ineq.contains('=');
+  }else{
+    top=version;
+    topExc=false;
+    bottom=version;
+    bottomExc=false;
+  }
+
+  return new VersionConstraint(mod,sources,bottom,top,bottomExc,topExc,optional,false);
 }
 
 class VersionConstraint{
@@ -83,20 +114,27 @@ class VersionConstraint{
     this.optional&&=that.optional;
   }
 
-  static incompatible(mod,sources){
-    return new VersionConstraint(mod,sources,null,null,null,null,null,true);
+  includes(version){
+    if(cmpv(top,version)>0||cmpv(bottom,version)<0){ // outside the range
+      return false;
+    }
+    if(cmpv(top,version)==0){ // equal to top
+      return !this.topExclude;
+    }
+    if(cmpv(bottom,version)==0){ // equal to bottom
+      return !this.bottomExclude;
+    }
+    return true; // inside the range
   }
 
-  static constraint(mod,sources,ineq,version,optional){
-    return new VersionConstraint(mod,sources,null,null,null,null,optional,false);
-  }
+  resolve()
 }
 
 // cmpv=v2-v1
 
 function cmpv(v1,v2) {
-  let v1s=v1.split('.');
-  let v2s=v2.split('.');
+  let v1s=v1.split('.').map(x=>+x);
+  let v2s=v2.split('.').map(x=>+x);
   for(let i=0;;i++){
     if(i>min(v1s.length,v2s.length)){
       return v2s.length-v1s.length;
