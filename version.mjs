@@ -1,3 +1,5 @@
+import {downloadjson} from './downloadjson.mjs'
+
 function versionConstraint(version,mod,source) {
   // version is a string
 
@@ -95,16 +97,16 @@ class VersionConstraint{
   resolve(){
     let modsurl=`https://mods.factorio.com/api/mods/${this.mod}/full`
     return downloadjson(modsurl).then((data)=>{
-      let data;
+      let mdata;
       for(let {version:version,info_json:{dependencies:deps}} of data.releases){
         if(this.includes(version)){
-          data={version:version,deps:deps};
+          mdata={version:version,deps:deps};
           break;
         }
       }
       var resolved={};
-      resolved.deps=data.deps.map(dep=>versionConstraint(dep,null,this.mod)).map(v=>[v.mod,v]);
-      resolved.version=data.version;
+      resolved.deps=mdata.deps.map(dep=>versionConstraint(dep,null,this.mod)).map(v=>[v.mod,v]);
+      resolved.version=mdata.version;
       // make into a resolvedversion object
       return resolved;
     });

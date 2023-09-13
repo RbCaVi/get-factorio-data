@@ -1,5 +1,5 @@
 
-import {versionConstraint,incompatible,anyVersion,constraint,VersionConstraint} from './version.js';
+import {versionConstraint,incompatible,anyVersion,constraint,VersionConstraint} from './version.mjs';
 
 //version is an upper and lower bound
 //inclusive or exclusive
