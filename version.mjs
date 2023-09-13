@@ -82,13 +82,14 @@ class VersionConstraint{
     if(this.incompatible){
       return false;
     }
-    if(cmpv(this.top,version)>0||cmpv(this.bottom,version)<0){ // outside the range
+
+    if((this.top!=null&&cmpv(this.top,version)>0)||(this.bottom!=null&&cmpv(this.bottom,version)<0)){ // outside the range
       return false;
     }
-    if(cmpv(this.top,version)==0){ // equal to top
+    if((this.top!=null&&cmpv(this.top,version)==0)){ // equal to top
       return !this.topExclude;
     }
-    if(cmpv(this.bottom,version)==0){ // equal to bottom
+    if((this.bottom!=null&&cmpv(this.bottom,version)==0)){ // equal to bottom
       return !this.bottomExclude;
     }
     return true; // inside the range
