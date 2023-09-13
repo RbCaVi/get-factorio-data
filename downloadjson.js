@@ -1,5 +1,5 @@
 import {download} from './download.js'
 
-const downloadjson=download(url).then(data=>JSON.parse(data.toString()));
+const downloadjson=download(url,true).then(data=>JSON.parse(data));
 
 export {downloadjson};
