@@ -5,7 +5,7 @@ function versionConstraint(version,mod,source) {
   let optional=false;
   switch(parts[0]){
   case '!':
-    return incompatible(mod,[source]);
+    return incompatible(mod??parts[1],[source]);
   case '?':
   case '(?)':
     optional=true;
@@ -13,7 +13,7 @@ function versionConstraint(version,mod,source) {
     parts=parts.slice(1);
   default:
   }
-  return constraint(mod,[source],parts[2],parts[3],optional);
+  return constraint(mod??parts[0],[source],parts[1],parts[2],optional);
 }
 
 function incompatible(mod,sources){
@@ -77,20 +77,37 @@ class VersionConstraint{
   }
 
   includes(version){
-    if(cmpv(top,version)>0||cmpv(bottom,version)<0){ // outside the range
+    if(this.incompatible){
       return false;
     }
-    if(cmpv(top,version)==0){ // equal to top
+    if(cmpv(this.top,version)>0||cmpv(this.bottom,version)<0){ // outside the range
+      return false;
+    }
+    if(cmpv(this.top,version)==0){ // equal to top
       return !this.topExclude;
     }
-    if(cmpv(bottom,version)==0){ // equal to bottom
+    if(cmpv(this.bottom,version)==0){ // equal to bottom
       return !this.bottomExclude;
     }
     return true; // inside the range
   }
 
   resolve(){
-    return 
+    let modsurl=`https://mods.factorio.com/api/mods/${this.mod}/full`
+    return downloadjson(modsurl).then((data)=>{
+      let data;
+      for(let {version:version,info_json:{dependencies:deps}} of data.releases){
+        if(this.includes(version)){
+          data={version:version,deps:deps};
+          break;
+        }
+      }
+      var resolved={};
+      resolved.deps=data.deps.map(dep=>versionConstraint(dep,null,this.mod)).map(v=>[v.mod,v]);
+      resolved.version=data.version;
+      // make into a resolvedversion object
+      return resolved;
+    });
   }
 }
 
