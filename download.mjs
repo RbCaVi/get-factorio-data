@@ -1,3 +1,5 @@
+import * as https from 'node:https';
+
 const download=(url,asString=false)=>new Promise((resolve,reject)=>
   https.get(url, (res) => {
     const data = [];

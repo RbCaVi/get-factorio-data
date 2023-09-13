@@ -1,5 +1,5 @@
 import {download} from './download.mjs'
 
-const downloadjson=download(url,true).then(data=>JSON.parse(data));
+const downloadjson=(url)=>download(url,true).then(data=>JSON.parse(data));
 
 export {downloadjson};

@@ -1,6 +1,10 @@
-import {download} from './download.js'
+import {download} from './download.mjs'
 
-yauzl=require('yauzl');
+import * as fs from 'node:fs';
+
+import * as path from 'node:path';
+
+import * as yauzl from 'yauzl';
 
 let downloadunzip=(url,contentroot,dest)=>download(url).then(buffer=>yauzl.fromBuffer(buffer, {lazyEntries: true}, function(err, zipfile) {
   if (err) throw err;
