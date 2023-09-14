@@ -76,6 +76,7 @@ class VersionConstraint{
     [this.bottomVersion,this.bottomExclude]=maxv([this.bottomVersion,this.bottomExclude],[that.bottomVersion,that.bottomExclude]);
     [this.topVersion,this.topExclude]=minv([this.topVersion,this.topExclude],[that.topVersion,that.topExclude]);
     this.optional&&=that.optional;
+    this.sources=this.sources.concat(that.sources);
   }
 
   includes(version){
