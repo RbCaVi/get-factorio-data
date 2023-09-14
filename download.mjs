@@ -1,7 +1,10 @@
 import * as https from 'node:https';
+import * as fs from 'node:fs';
+
+let headers={'User-Agent':'RbCaVi-SEJS'}
 
 const download=(url,asString=false)=>new Promise((resolve,reject)=>
-  https.get(url, (res) => {
+  https.get(url, {headers:headers}, (res) => {
     const data = [];
     res.on('data', (chunk) => {
       data.push(chunk);
@@ -21,7 +24,7 @@ const download=(url,asString=false)=>new Promise((resolve,reject)=>
 );
 
 const downloadfile=(url,filename)=>new Promise((resolve,reject)=>
-  https.get(url, (res) => {
+  https.get(url, {headers:headers}, (res) => {
     const file=fs.createWriteStream(filename);
     const data = [];
     res.pipe(file);
