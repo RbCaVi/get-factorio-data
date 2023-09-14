@@ -2,7 +2,8 @@ import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
 
-import {downloadunzip} from './unzip.mjs'
+import {unzip} from './unzip.mjs'
+import {downloadfile} from './download.mjs'
 
 import {versionConstraint,incompatible,anyVersion,constraint,VersionConstraint} from './version.mjs';
 
@@ -121,7 +122,7 @@ resolveAllMap(resolvedVersions).then((resolvedVersions)=>{
       }
       if(depversion.incompatible&&!depversion.includes(resolvedVersions.get(depmod).version)){
         if(depmod=='base'){
-          resolvedVersions.remove('base');
+          resolvedVersions.delete('base');
         }else{
           errors.push(`Incompatible version: ${depmod} - needs version ${depversion}`)
         }
