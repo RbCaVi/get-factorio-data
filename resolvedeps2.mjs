@@ -11,8 +11,7 @@ import {versionConstraint,incompatible,anyVersion,constraint,VersionConstraint} 
 
 var pack={
   mods:{
-    ["base"]:{},
-    ["core"]:{},
+    ["minimal-no-base-mod"]:{},
   }
 }
 
@@ -37,18 +36,21 @@ function resolveAll(ps){
   // ps is {key:promise ...}
   // returns a Promise that resolves to {key:promise value}
   // will reject with any error
-  var values={};
-  return ps.entries().map(
-    ([k,p])=>p.then(data=>{values[k]=data;})
+  var values=new Map();
+  console.log(ps);
+  return [...ps.entries()].map(
+    ([k,p])=>p.then(data=>{values.set(k,data);})
   ).reduce(
     (p1,p2)=>p1.then(()=>p2)
   ).then(()=>values);
 }
 
 function downloadmod(mod,version,data){
-  url=`https://mods-storage.re146.dev/${mod}/${version}.zip`;
-  contentroot=`${mod}_${version}`;
-  dest=`/home/rvail/seauto/sitegen/mods/${mod}-${version}`;
+  let url=`https://mods-storage.re146.dev/${mod}/${version}.zip`;
+  let contentroot=`${mod}_${version}`;
+  let dest=`mods/${mod}-${version}`;
+
+  let temp=gettempfile();
 
   downloadunzip(url,contentroot,dest)
 }
@@ -57,11 +59,15 @@ resolveAll(resolvedVersions).then((resolvedVersions)=>{
   let errors=[];
   for(let [mod,resolvedVersion] of resolvedVersions){
     for(let [depmod,depversion] of resolvedVersion.deps){
-      if(!resolvedVersions.has(depmod)){
+      if(!depversion.incompatible&&!resolvedVersions.has(depmod)){
         errors.push(`Unresolved dependency: ${depmod} - needs version ${depversion}`)
       }
-      if(!depversion.includes(resolvedVersions.get(depmod).version)){
-        errors.push(`Incompatible version: ${depmod} - needs version ${depversion}`)
+      if(depversion.incompatible&&!depversion.includes(resolvedVersions.get(depmod).version)){
+        if(depmod=='base'){
+          resolvedVersions.remove('base');
+        }else{
+          errors.push(`Incompatible version: ${depmod} - needs version ${depversion}`)
+        }
       }
     }
   }
