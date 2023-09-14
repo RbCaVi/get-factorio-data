@@ -27,6 +27,14 @@ for(let [mod,moddata] of Object.entries(pack.mods)){
   versions.set(mod,version);
 }
 
+if(!versions.has('core')){
+  versions.set('core',anyVersion('core','__initial__'));
+}
+
+if(!versions.has('base')){
+  versions.set('base',anyVersion('base','__initial__'));
+}
+
 let resolvedVersions=new Map();
 for(let [mod,version] of versions){
   resolvedVersions.set(mod,version.resolve());
