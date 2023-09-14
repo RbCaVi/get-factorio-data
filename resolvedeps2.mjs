@@ -32,7 +32,7 @@ for(let [mod,version] of versions){
   resolvedVersions.set(mod,version.resolve());
 }
 
-function resolveAll(ps){
+function resolveAllMap(ps){
   // ps is {key:promise ...}
   // returns a Promise that resolves to {key:promise value}
   // will reject with any error
@@ -45,17 +45,41 @@ function resolveAll(ps){
   ).then(()=>values);
 }
 
+let gettempfile=(()=>{
+  let gettmpdir=fsPromises.mkdtemp(path.join(os.tmpdir(), 'foo-'));
+  let tempcount=0;
+
+  function gettempfile() {
+    return gettmpdir.then((tmpdir)=>{
+      tempcount++;
+      return path.join(tmpdir,`temp${tempcount}`)
+    });
+  }
+
+  return gettempfile;
+})()
+
+let modpromises=new Map();
+
 function downloadmod(mod,version,data){
   let url=`https://mods-storage.re146.dev/${mod}/${version}.zip`;
   let contentroot=`${mod}_${version}`;
   let dest=`mods/${mod}-${version}`;
 
-  let temp=gettempfile();
-
-  downloadunzip(url,contentroot,dest)
+  let getmodfile;
+  if(modpromises.has(url)){
+    getmodfile=modpromises.get(url);
+  }else{
+    getmodfile=gettempfile().then((tempfile)=>{
+      let p=downloadfile(url,tempfile);
+      modpromises.set(url,p.then(()=>tempfile));
+      return modpromises.get(url);
+    });
+  }
+  return getmodfile.then((filename)=>unzip(filename,contentroot,dest));
 }
 
-resolveAll(resolvedVersions).then((resolvedVersions)=>{
+resolveAllMap(resolvedVersions).then((resolvedVersions)=>{
   let errors=[];
   for(let [mod,resolvedVersion] of resolvedVersions){
     for(let [depmod,depversion] of resolvedVersion.deps){
@@ -76,7 +100,11 @@ resolveAll(resolvedVersions).then((resolvedVersions)=>{
   }
   return resolvedVersions;
 }).then((resolvedVersions)=>{
+  let downloadingmods=[];
   for(let [mod,resolvedVersion] of resolvedVersions){
-    downloadmod(mod,resolvedVersion.version,pack.mods[mod]);
+    downloadingmods.push(downloadmod(mod,resolvedVersion.version,pack.mods[mod]));
   }
-})
+  return Promise.all(downloadingmods);
+}).then(()=>{
+  // run the lua
+});
