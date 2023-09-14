@@ -27,18 +27,32 @@ for(let [mod,moddata] of Object.entries(pack.mods)){
   versions.set(mod,version);
 }
 
+// make core and base share the same version
+let coreversion,baseversion;
 if(!versions.has('core')){
-  versions.set('core',anyVersion('core','__initial__'));
+  coreversion=anyVersion('core','__initial__');
+}else{
+  coreversion=versions.get('core');
 }
-
 if(!versions.has('base')){
-  versions.set('base',anyVersion('base','__initial__'));
+  baseversion=anyVersion('base','__initial__');
+}else{
+  baseversion=versions.get('base');
 }
+coreversion.mod='core+base';
+baseversion.mod='core+base';
+coreversion.intersect(baseversion);
+let mergedversion=coreversion;
+versions.set('base',mergedversion);
+versions.set('core',mergedversion);
+//versions.set('core+base',mergedversion);
+
 
 let resolvedVersions=new Map();
 for(let [mod,version] of versions){
   resolvedVersions.set(mod,version.resolve());
 }
+
 
 function resolveAllMap(ps){
   // ps is {key:promise ...}
@@ -70,9 +84,16 @@ let gettempfile=(()=>{
 let modpromises=new Map();
 
 function downloadmod(mod,version,data){
-  let url=`https://mods-storage.re146.dev/${mod}/${version}.zip`;
-  let contentroot=`${mod}_${version}`;
-  let dest=`mods/${mod}-${version}`;
+  let url,contentroot,dest;
+  
+  if(mod=='core'||mod=='base'){
+    url=`https://github.com/wube/factorio-data/archive/refs/tags/${version}.zip`;
+    contentroot=`factorio-data-${version}/${mod}`;
+  }else{
+    url=`https://mods-storage.re146.dev/${mod}/${version}.zip`;
+    contentroot=`${mod}_${version}`;
+  }
+  dest=`mods/${mod}-${version}`;
 
   let getmodfile;
   if(modpromises.has(url)){

@@ -97,13 +97,25 @@ class VersionConstraint{
   }
 
   resolve(){
-    let modsurl=`https://mods.factorio.com/api/mods/${this.mod}/full`
-    return downloadjson(modsurl).then((data)=>{
+    let url;
+    if(mod=='core'||mod=='base'){
+      url='https://api.github.com/repos/wube/factorio-data/git/refs/tags';
+    }else{
+      url=`https://mods.factorio.com/api/mods/${this.mod}/full`;
+    }
+    return downloadjson(url).then((data)=>{
       let mdata;
-      for(let {version:version,info_json:{dependencies:deps}} of data.releases){
-        if(this.includes(version)){
-          mdata={version:version,deps:deps};
-          break;
+      if(mod=='core'||mod=='base'){
+        for(let {ref:version} of data){
+          if(this.includes(version)&&cmpv(version,mdata.version)<0){
+            mdata={version:version,deps:deps};
+          }
+        }
+      }else{
+        for(let {version:version,info_json:{dependencies:deps}} of data.releases){
+          if(this.includes(version)&&cmpv(version,mdata.version)<0){
+            mdata={version:version,deps:deps};
+          }
         }
       }
       var resolved={};
