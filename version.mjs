@@ -98,22 +98,23 @@ class VersionConstraint{
 
   resolve(){
     let url;
-    if(mod=='core'||mod=='base'){
+    if(this.mod=='core'||this.mod=='base'||this.mod=='core+base'){
       url='https://api.github.com/repos/wube/factorio-data/git/refs/tags';
     }else{
       url=`https://mods.factorio.com/api/mods/${this.mod}/full`;
     }
     return downloadjson(url).then((data)=>{
       let mdata;
-      if(mod=='core'||mod=='base'){
+      if(this.mod=='core'||this.mod=='base'||this.mod=='core+base'){
+        console.log(data);
         for(let {ref:version} of data){
-          if(this.includes(version)&&cmpv(version,mdata.version)<0){
-            mdata={version:version,deps:deps};
+          if(this.includes(version)&&cmpv(version,mdata?.version??'0.0.0')<0){
+            mdata={version:version,deps:[]};
           }
         }
       }else{
         for(let {version:version,info_json:{dependencies:deps}} of data.releases){
-          if(this.includes(version)&&cmpv(version,mdata.version)<0){
+          if(this.includes(version)&&cmpv(version,mdata?.version??'0.0.0')<0){
             mdata={version:version,deps:deps};
           }
         }
@@ -142,6 +143,10 @@ function cmpv(v1,v2) {
       return 1;
     }
   }
+}
+
+function min(x,y){
+  return x<y?x:y;
 }
 
 function minv([v1,exc1],[v2,exc2]) {
