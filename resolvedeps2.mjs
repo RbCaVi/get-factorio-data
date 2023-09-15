@@ -79,7 +79,7 @@ function resolveAllArr(ps){
   var values=[];
   console.log(ps);
   return ps.map(
-    (p,i)=>p.then(data=>{console.log('g',i,data);values[i]=data;})
+    (p,i)=>p.then(data=>{values[i]=data;})
   ).reduce(
     (p1,p2)=>{return p1.then(()=>p2)}
   ).then(()=>values);
@@ -119,7 +119,7 @@ function downloadmod(mod,rversion,data){
 
   let getmodfile;
   if(modpromises.has(url)){
-    console.log('x2',url);
+    console.log('using cached',url);
     getmodfile=modpromises.get(url);
   }else{
     getmodfile=gettempfile().then((tempfile)=>{
@@ -156,7 +156,7 @@ resolveAllMap(resolvedVersions).then((resolvedVersions)=>{
   let downloadingmods=[];
   for(let [mod,resolvedVersion] of resolvedVersions){
     console.log(mod, 'resolves to',resolvedVersion);
-    let m=downloadmod(mod,resolvedVersion,pack.mods[mod]).then(()=>{console.log('successx');},()=>{console.log('failx');});
+    let m=downloadmod(mod,resolvedVersion,pack.mods[mod]);
     downloadingmods.push(m);
   }
   console.log('downloading',downloadingmods);
@@ -165,5 +165,5 @@ resolveAllMap(resolvedVersions).then((resolvedVersions)=>{
   console.log('LUA!!!!!!!!!');
   // run the lua
 },(err)=>{
-  console.log('fail',err);
+  console.log('fail:',err);
 });
