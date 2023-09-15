@@ -118,21 +118,18 @@ function downloadmod(mod,rversion,data){
   console.log(modpromises);
 
   let getmodfile;
-    console.log('x',modpromises);
   if(modpromises.has(url)){
     console.log('x2',url);
     getmodfile=modpromises.get(url);
   }else{
-    console.log('x1',url);
     getmodfile=gettempfile().then((tempfile)=>{
       let p=downloadfile(url,tempfile);
-      console.log('success1 getting',url,tempfile);
-      modpromises.set(url,p.then(()=>{console.log('success1 got',url,tempfile);return tempfile}));
+      console.log('getting',url,tempfile);
+      modpromises.set(url,p.then(()=>tempfile));
       return modpromises.get(url);
     });
   }
-  console.log('success0');
-  return getmodfile.then((filename)=>{console.log('success1');return unzip(filename,contentroot,dest)});
+  return getmodfile.then((filename)=>unzip(filename,contentroot,dest));
 }
 
 resolveAllMap(resolvedVersions).then((resolvedVersions)=>{
@@ -158,15 +155,15 @@ resolveAllMap(resolvedVersions).then((resolvedVersions)=>{
 }).then((resolvedVersions)=>{
   let downloadingmods=[];
   for(let [mod,resolvedVersion] of resolvedVersions){
-    console.log(mod,resolvedVersion);
+    console.log(mod, 'resolves to',resolvedVersion);
     let m=downloadmod(mod,resolvedVersion,pack.mods[mod]).then(()=>{console.log('successx');},()=>{console.log('failx');});
     downloadingmods.push(m);
   }
-  console.log('a',downloadingmods);
+  console.log('downloading',downloadingmods);
   return resolveAllArr(downloadingmods);
 }).then(()=>{
-  console.log('success3');
+  console.log('LUA!!!!!!!!!');
   // run the lua
-},()=>{
-  console.log('fail');
+},(err)=>{
+  console.log('fail',err);
 });
