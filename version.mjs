@@ -33,12 +33,12 @@ function constraint(mod,sources,ineq,version,optional){
   let top=null;
   let bottomExc=null;
   let topExc=null;
-  if(ineq.contains('<')){
+  if(ineq.includes('<')){
     top=version;
-    topExc=!ineq.contains('=');
-  }else if(ineq.contains('>')){
+    topExc=!ineq.includes('=');
+  }else if(ineq.includes('>')){
     bottom=version;
-    bottomExc=!ineq.contains('=');
+    bottomExc=!ineq.includes('=');
   }else{
     top=version;
     topExc=false;
