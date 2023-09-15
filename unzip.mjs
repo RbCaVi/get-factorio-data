@@ -6,7 +6,8 @@ import * as path from 'node:path';
 
 import * as yauzl from 'yauzl';
 
-function unzipcallback(contentroot,dest){
+function unzipcallback(contentroot,dest,resolve,reject){
+  console.log(contentroot,dest);
   function callback(err, zipfile) {
     if (err) throw err;
     let ncroot=path.normalize(contentroot);
@@ -39,12 +40,22 @@ function unzipcallback(contentroot,dest){
         });
       }
     });
+    if(resolve){
+      zipfile.on('end',resolve);
+    }
+    if(reject){
+      zipfile.on('error',reject);
+    }
   }
   return callback;
 }
 
-let downloadunzip=(url,contentroot,dest)=>download(url).then(buffer=>yauzl.fromBuffer(buffer, {lazyEntries: true}, unzipcallback(contentroot,dest)));
+let downloadunzip=(url,contentroot,dest)=>download(url).then(buffer=>new Promise((resolve,reject)=>
+  yauzl.fromBuffer(buffer, {lazyEntries: true}, unzipcallback(contentroot,dest,resolve,reject))
+));
 
-let unzip=(filename,contentroot,dest)=>yauzl.open(filename, {lazyEntries: true}, unzipcallback(contentroot,dest))
+let unzip=(filename,contentroot,dest)=>new Promise((resolve,reject)=>
+  yauzl.open(filename, {lazyEntries: true}, unzipcallback(contentroot,dest,resolve,reject))
+)
 
 export {downloadunzip,unzip};
