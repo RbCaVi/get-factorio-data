@@ -14,51 +14,6 @@ import {versionConstraint,incompatible,anyVersion,constraint,VersionConstraint} 
 //using a mods query
 //explicitly specify the mods you want with one version constraint
 
-var pack={
-  mods:{
-    ["minimal-no-base-mod"]:{},
-  }
-}
-
-let versions=new Map();
-
-for(let [mod,moddata] of Object.entries(pack.mods)){
-  let version;
-  if(moddata.version){
-    version=versionConstraint('____ = '+moddata.version,mod,'__initial__');
-  }else{
-    version=anyVersion(mod,'__initial__');
-  }
-  versions.set(mod,version);
-}
-
-// make core and base share the same version
-let coreversion,baseversion;
-if(!versions.has('core')){
-  coreversion=anyVersion('core','__initial__');
-}else{
-  coreversion=versions.get('core');
-}
-if(!versions.has('base')){
-  baseversion=anyVersion('base','__initial__');
-}else{
-  baseversion=versions.get('base');
-}
-coreversion.mod='core+base';
-baseversion.mod='core+base';
-coreversion.intersect(baseversion);
-let mergedversion=coreversion;
-versions.set('base',mergedversion);
-versions.set('core',mergedversion);
-//versions.set('core+base',mergedversion);
-
-
-let resolvedVersions=new Map();
-for(let [mod,version] of versions){
-  resolvedVersions.set(mod,version.resolve());
-}
-
-
 function resolveAllMap(ps){
   // ps is {key:promise ...}
   // returns a Promise that resolves to {key:promise value}
@@ -132,38 +87,80 @@ function downloadmod(mod,rversion,data){
   return getmodfile.then((filename)=>unzip(filename,contentroot,dest));
 }
 
-resolveAllMap(resolvedVersions).then((resolvedVersions)=>{
-  let errors=[];
-  for(let [mod,resolvedVersion] of resolvedVersions){
-    for(let [depmod,depversion] of resolvedVersion.deps){
-      if(!depversion.incompatible&&!depversion.optional&&!resolvedVersions.has(depmod)){
-        errors.push(`Unresolved dependency: ${depmod} - needs version ${depversion}`)
-      }
-      if(depversion.incompatible&&depversion.includes(resolvedVersions.get(depmod)?.version)){
-        if(depmod=='base'){
-          resolvedVersions.delete('base');
-        }else{
-          errors.push(`Incompatible version: ${depmod} - needs version ${depversion}`)
+function run(pack){
+  let versions=new Map();
+
+  for(let [mod,moddata] of Object.entries(pack.mods)){
+    let version;
+    if(moddata.version){
+      version=versionConstraint('____ = '+moddata.version,mod,'__initial__');
+    }else{
+      version=anyVersion(mod,'__initial__');
+    }
+    versions.set(mod,version);
+  }
+
+  // make core and base share the same version
+  let coreversion,baseversion;
+  if(!versions.has('core')){
+    coreversion=anyVersion('core','__initial__');
+  }else{
+    coreversion=versions.get('core');
+  }
+  if(!versions.has('base')){
+    baseversion=anyVersion('base','__initial__');
+  }else{
+    baseversion=versions.get('base');
+  }
+  coreversion.mod='core+base';
+  baseversion.mod='core+base';
+  coreversion.intersect(baseversion);
+  let mergedversion=coreversion;
+  versions.set('base',mergedversion);
+  versions.set('core',mergedversion);
+  //versions.set('core+base',mergedversion);
+
+
+  let resolvedVersions=new Map();
+  for(let [mod,version] of versions){
+    resolvedVersions.set(mod,version.resolve());
+  }
+
+  return resolveAllMap(resolvedVersions).then((resolvedVersions)=>{
+    let errors=[];
+    for(let [mod,resolvedVersion] of resolvedVersions){
+      for(let [depmod,depversion] of resolvedVersion.deps){
+        if(!depversion.incompatible&&!depversion.optional&&!resolvedVersions.has(depmod)){
+          errors.push(`Unresolved dependency: ${depmod} - needs version ${depversion}`)
+        }
+        if(depversion.incompatible&&depversion.includes(resolvedVersions.get(depmod)?.version)){
+          if(depmod=='base'){
+            resolvedVersions.delete('base');
+          }else{
+            errors.push(`Incompatible version: ${depmod} - needs version ${depversion}`)
+          }
         }
       }
     }
-  }
-  if(errors.length>0){
-    throw new Error(errors);
-  }
-  return resolvedVersions;
-}).then((resolvedVersions)=>{
-  let downloadingmods=[];
-  for(let [mod,resolvedVersion] of resolvedVersions){
-    console.log(mod, 'resolves to',resolvedVersion);
-    let m=downloadmod(mod,resolvedVersion,pack.mods[mod]);
-    downloadingmods.push(m);
-  }
-  console.log('downloading',downloadingmods);
-  return resolveAllArr(downloadingmods);
-}).then(()=>{
-  console.log('LUA!!!!!!!!!');
-  // run the lua
-},(err)=>{
-  console.log('fail:',err);
-});
+    if(errors.length>0){
+      throw new Error(errors);
+    }
+    return resolvedVersions;
+  }).then((resolvedVersions)=>{
+    let downloadingmods=[];
+    for(let [mod,resolvedVersion] of resolvedVersions){
+      console.log(mod, 'resolves to',resolvedVersion);
+      let m=downloadmod(mod,resolvedVersion,pack.mods[mod]);
+      downloadingmods.push(m);
+    }
+    console.log('downloading',downloadingmods);
+    return resolveAllArr(downloadingmods);
+  }).then(()=>{
+    console.log('LUA!!!!!!!!!');
+    // run the lua
+  },(err)=>{
+    console.log('fail:',err);
+  });
+}
+
+fsPromises.open('pack.json').then(JSON.parse).then(run);

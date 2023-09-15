@@ -1,0 +1,22 @@
+{
+  "mods":{
+    "spaceexplorationdatachipaugmenter":{},
+    "space-exploration":{},
+    "aai-containers":{},
+    "aai-industry":{},
+    "alien-biomes":{},
+    "jetpack":{},
+    "robot_attrition":{},
+    "shield-projector":{},
+    "space-exploration-graphics":{},
+    "space-exploration-graphics-2":{},
+    "space-exploration-graphics-3":{},
+    "space-exploration-graphics-4":{},
+    "space-exploration-graphics-5":{},
+    "space-exploration-menu-simulations":{},
+    "space-exploration-postprocess":{},
+    "informatron":{},
+    "aai-signal-transmission":{},
+    "simhelper":{},
+  }
+}
