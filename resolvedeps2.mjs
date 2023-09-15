@@ -72,6 +72,19 @@ function resolveAllMap(ps){
   ).then(()=>values);
 }
 
+function resolveAllArr(ps){
+  // ps is [promise ...]
+  // returns a Promise that resolves to [promise value]
+  // will reject with any error
+  var values=[];
+  console.log(ps);
+  return ps.map(
+    (p,i)=>p.then(data=>{console.log('g',i,data);values[i]=data;})
+  ).reduce(
+    (p1,p2)=>{return p1.then(()=>p2)}
+  ).then(()=>values);
+}
+
 let gettempfile=(()=>{
   let gettmpdir=fsPromises.mkdtemp(path.join(os.tmpdir(), 'foo-'));
   let tempcount=0;
@@ -88,29 +101,38 @@ let gettempfile=(()=>{
 
 let modpromises=new Map();
 
-function downloadmod(mod,version,data){
+function downloadmod(mod,rversion,data){
+  let version=rversion.version;
+  console.log(mod,version,data);
   let url,contentroot,dest;
   
   if(mod=='core'||mod=='base'){
-    url=`https://github.com/wube/factorio-data/archive/refs/tags/${version}.zip`;
-    contentroot=`factorio-data-${version}/${mod}`;
+    url=`https://api.github.com/repos/wube/factorio-data/zipball/${rversion.ref}`;
+    contentroot=`wube-factorio-data-${(''+rversion.ref).slice(0,7)}/${mod}`;
   }else{
     url=`https://mods-storage.re146.dev/${mod}/${version}.zip`;
     contentroot=`${mod}_${version}`;
   }
   dest=`mods/${mod}-${version}`;
 
+  console.log(modpromises);
+
   let getmodfile;
+    console.log('x',modpromises);
   if(modpromises.has(url)){
+    console.log('x2',url);
     getmodfile=modpromises.get(url);
   }else{
+    console.log('x1',url);
     getmodfile=gettempfile().then((tempfile)=>{
       let p=downloadfile(url,tempfile);
-      modpromises.set(url,p.then(()=>tempfile));
+      console.log('success1 getting',url,tempfile);
+      modpromises.set(url,p.then(()=>{console.log('success1 got',url,tempfile);return tempfile}));
       return modpromises.get(url);
     });
   }
-  return getmodfile.then((filename)=>unzip(filename,contentroot,dest));
+  console.log('success0');
+  return getmodfile.then((filename)=>{console.log('success1');return unzip(filename,contentroot,dest)});
 }
 
 resolveAllMap(resolvedVersions).then((resolvedVersions)=>{
@@ -136,9 +158,15 @@ resolveAllMap(resolvedVersions).then((resolvedVersions)=>{
 }).then((resolvedVersions)=>{
   let downloadingmods=[];
   for(let [mod,resolvedVersion] of resolvedVersions){
-    downloadingmods.push(downloadmod(mod,resolvedVersion.version,pack.mods[mod]));
+    console.log(mod,resolvedVersion);
+    let m=downloadmod(mod,resolvedVersion,pack.mods[mod]).then(()=>{console.log('successx');},()=>{console.log('failx');});
+    downloadingmods.push(m);
   }
-  return Promise.all(downloadingmods);
+  console.log('a',downloadingmods);
+  return resolveAllArr(downloadingmods);
 }).then(()=>{
+  console.log('success3');
   // run the lua
+},()=>{
+  console.log('fail');
 });
