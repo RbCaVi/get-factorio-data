@@ -139,7 +139,7 @@ resolveAllMap(resolvedVersions).then((resolvedVersions)=>{
       if(!depversion.incompatible&&!depversion.optional&&!resolvedVersions.has(depmod)){
         errors.push(`Unresolved dependency: ${depmod} - needs version ${depversion}`)
       }
-      if(depversion.incompatible&&!depversion.includes(resolvedVersions.get(depmod).version)){
+      if(depversion.incompatible&&depversion.includes(resolvedVersions.get(depmod)?.version)){
         if(depmod=='base'){
           resolvedVersions.delete('base');
         }else{

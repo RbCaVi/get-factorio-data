@@ -82,6 +82,9 @@ class VersionConstraint{
   }
 
   includes(version){
+    if(!version){
+      return false;
+    }
     if(this.incompatible){
       return false;
     }
