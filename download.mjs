@@ -1,10 +1,23 @@
 import * as https from 'node:https';
 import * as fs from 'node:fs';
+import * as streamPromises from 'node:stream/promises'
 
 let headers={'User-Agent':'RbCaVi-SEJS'}
 
+const request=url=>new Promise((resolve,reject)=>{
+  https.get(url,{headers:headers},resolve).on('error', reject)
+});
+
+const requestRedirect=url=>request(url).then(res=>{
+  if(res.statusCode==301||res.statusCode==302||res.statusCode==307||res.statusCode==308){
+    console.log('redirected',url,res.statusCode,res.headers.location)
+    return requestRedirect(res.headers.location);
+  }
+  return res;
+})
+
 const download=(url,asString=false)=>new Promise((resolve,reject)=>
-  https.get(url, {headers:headers}, (res) => {
+  requestRedirect(url).then((res) => {
     const data = [];
     res.on('data', (chunk) => {
       data.push(chunk);
@@ -20,25 +33,18 @@ const download=(url,asString=false)=>new Promise((resolve,reject)=>
         resolve(buffer);
       }
     });
-  }).on('error', (err) => { reject(['download error:', err]); })
+  },reject)
 );
 
-const downloadfile=(url,filename)=>new Promise((resolve,reject)=>
-  https.get(url, {headers:headers}, (res) => {
-    const file=fs.createWriteStream(filename);
-    const data = [];
-    res.pipe(file);
-    res.on('end', () => {
-      if (!res.complete){
-        reject('The connection was terminated while the message was still being sent');
-      }
-    }).on('error', () => {
-      file.end();
-    });
-    file.on('end',()=>{
-      resolve();
-    });
-  }).on('error', (err) => { reject(['download error:', err]); })
-);
+const downloadfile=(url,filename)=>{
+  console.log('aaa11',url,filename);
+  const file=fs.createWriteStream(filename);
+  return new Promise((resolve,reject)=>
+    requestRedirect(url).then((res) => {
+      res.pipe(file);
+      resolve(streamPromises.finished(res));
+    },reject)
+  );
+};
 
 export {download,downloadfile};
