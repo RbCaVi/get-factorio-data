@@ -1,3 +1,5 @@
+import * as path from 'node:path'
+
 import {downloadjson} from './downloadjson.mjs'
 
 function versionConstraint(version,mod,source) {
@@ -106,10 +108,11 @@ class VersionConstraint{
     return downloadjson(url).then((data)=>{
       let mdata;
       if(this.mod=='core'||this.mod=='base'||this.mod=='core+base'){
-        console.log(data);
-        for(let {ref:version} of data){
+        //console.log(data);
+        for(let {ref:version,object:{sha:ref}} of data){
+          version=path.basename(version);
           if(this.includes(version)&&cmpv(version,mdata?.version??'0.0.0')<0){
-            mdata={version:version,deps:[]};
+            mdata={version:version,deps:[],ref:ref};
           }
         }
       }else{
@@ -122,7 +125,9 @@ class VersionConstraint{
       var resolved={};
       resolved.deps=mdata.deps.map(dep=>versionConstraint(dep,null,this.mod)).map(v=>[v.mod,v]);
       resolved.version=mdata.version;
+      resolved.ref=mdata.ref;
       // make into a resolvedversion object
+      console.log(this.mod,resolved.deps,resolved.version)
       return resolved;
     });
   }
