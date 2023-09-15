@@ -131,6 +131,20 @@ class VersionConstraint{
       return resolved;
     });
   }
+
+  toString(){
+    if(this.incompatible){
+      return `! ${this.mod}`;
+    }
+    let s=`${this.optional?'? ':''}${this.mod}`;
+    if(this.topVersion){
+      s+=` <${this.topExclude?'':'='} ${this.topVersion}`;
+    }
+    if(this.bottomVersion){
+      s+=` >${this.bottomExclude?'':'='} ${this.bottomVersion}`;
+    }
+    return s;
+  }
 }
 
 // cmpv=v2-v1
