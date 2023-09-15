@@ -139,7 +139,7 @@ resolveAllMap(resolvedVersions).then((resolvedVersions)=>{
   let errors=[];
   for(let [mod,resolvedVersion] of resolvedVersions){
     for(let [depmod,depversion] of resolvedVersion.deps){
-      if(!depversion.incompatible&&!resolvedVersions.has(depmod)){
+      if(!depversion.incompatible&&!depversion.optional&&!resolvedVersions.has(depmod)){
         errors.push(`Unresolved dependency: ${depmod} - needs version ${depversion}`)
       }
       if(depversion.incompatible&&!depversion.includes(resolvedVersions.get(depmod).version)){
