@@ -170,14 +170,35 @@ function run(pack){
     return resolvedVersions;
   }).then((resolvedVersions)=>{
     let downloadingmods=[];
+    let finishedmods={};
+    for(let [mod,] of resolvedVersions){
+      finishedmods[mod]=false;
+    }
     for(let [mod,resolvedVersion] of resolvedVersions){
       console.log(mod, 'resolves to',resolvedVersion);
-      let m=downloadmod(mod,resolvedVersion,pack.mods[mod]);
+      let m=downloadmod(mod,resolvedVersion,pack.mods[mod]).then(x=>{finishedmods[mod]=true;console.log(finishedmods);return x;});
       downloadingmods.push(m);
     }
     console.log('downloading',downloadingmods);
     return resolveAllArr(downloadingmods);
   }).then(()=>{
+    console.log('LUA!!!!!!!!!');
+    console.log('LUA!!!!!!!!!');
+    console.log('LUA!!!!!!!!!');
+    console.log('LUA!!!!!!!!!');
+    console.log('LUA!!!!!!!!!');
+    console.log('LUA!!!!!!!!!');
+    console.log('LUA!!!!!!!!!');
+    console.log('LUA!!!!!!!!!');
+    console.log('LUA!!!!!!!!!');
+    console.log('LUA!!!!!!!!!');
+    console.log('LUA!!!!!!!!!');
+    console.log('LUA!!!!!!!!!');
+    console.log('LUA!!!!!!!!!');
+    console.log('LUA!!!!!!!!!');
+    console.log('LUA!!!!!!!!!');
+    console.log('LUA!!!!!!!!!');
+    console.log('LUA!!!!!!!!!');
     console.log('LUA!!!!!!!!!');
     // run the lua
   },(err)=>{
