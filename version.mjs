@@ -67,6 +67,7 @@ class VersionConstraint{
       throw new Error(`mod ${this.mod} not equal to ${that.mod}`)
     }
     if(this.incompatible&&that.incompatible){
+      this.sources=this.sources.concat(that.sources);
       return;
     }
     if(this.incompatible&&!that.incompatible){
