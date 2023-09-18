@@ -146,6 +146,7 @@ class VersionConstraint{
     if(this.bottomVersion){
       s+=` >${this.bottomExclude?'':'='} ${this.bottomVersion}`;
     }
+    s+=` (from ${this.sources.join(',')})`;
     return s;
   }
 }
