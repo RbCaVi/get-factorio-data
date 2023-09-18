@@ -185,4 +185,14 @@ function run(pack){
   });
 }
 
-fsPromises.open('pack.json').then(JSON.parse).then(run);
+let read=filename=>new Promise((resolve,reject)=>{
+  let s='';
+  let f=fs.createReadStream(filename);
+  f.on('data',data=>{console.log(data);s+=data;});
+  f.on('end',()=>{resolve(s)});
+  f.on('error',reject);
+});
+
+let tee=x=>(console.log(x),x);
+
+read('pack.json').then(tee).then(JSON.parse).then(run);
