@@ -33,17 +33,19 @@ function constraint(mod,sources,ineq,version,optional){
   let top=null;
   let bottomExc=null;
   let topExc=null;
-  if(ineq.includes('<')){
-    top=version;
-    topExc=!ineq.includes('=');
-  }else if(ineq.includes('>')){
-    bottom=version;
-    bottomExc=!ineq.includes('=');
-  }else{
-    top=version;
-    topExc=false;
-    bottom=version;
-    bottomExc=false;
+  if(ineq){
+    if(ineq.includes('<')){
+      top=version;
+      topExc=!ineq.includes('=');
+    }else if(ineq.includes('>')){
+      bottom=version;
+      bottomExc=!ineq.includes('=');
+    }else{
+      top=version;
+      topExc=false;
+      bottom=version;
+      bottomExc=false;
+    }
   }
 
   return new VersionConstraint(mod,sources,bottom,top,bottomExc,topExc,optional,false);
