@@ -36,13 +36,51 @@ const download=(url,asString=false)=>new Promise((resolve,reject)=>
   },reject)
 );
 
-const downloadfile=(url,filename)=>{
+const downloadfile=(url,filename,startcallback,callback,endcallback)=>{
   console.log('aaa11',url,filename);
   const file=fs.createWriteStream(filename);
   return new Promise((resolve,reject)=>
     requestRedirect(url).then((res) => {
-      res.pipe(file);
-      resolve(streamPromises.finished(res));
+      let length=res.headers['content-length'];
+      if(startcallback){
+        startcallback(length,filename,url);
+      }
+      let error;
+      if(callback){
+        res.on('data', data => {
+          // https://stackoverflow.com/questions/56944300/how-can-track-write-progress-when-piping-with-node-js
+          file.write(data, () => {
+            callback(data,length,filename,url);
+          });
+        });
+        res.on('end',()=>{
+          file.end();
+          if (!res.complete){
+            error='The connection was terminated while the message was still being sent';
+          }
+        });
+        res.on('error',()=>{
+          error='download error';
+          file.end();
+        });
+      }else{
+        res.pipe(file);
+        res.on('end',()=>{
+          if (!res.complete){
+            error='The connection was terminated while the message was still being sent';
+          }
+        });
+      }
+      if(endcallback){
+        file.on('end',()=>{endcallback(length,filename,url)});
+      }
+      streamPromises.finished(file).then(()=>{
+        if(error){
+          reject(error);
+        }else{
+          resolve();
+        }
+      });
     },reject)
   );
 };

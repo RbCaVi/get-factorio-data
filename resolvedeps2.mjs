@@ -1,9 +1,14 @@
 import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
+import * as fs from 'node:fs';
+import * as process from 'node:process';
 
 import {unzip} from './unzip.mjs'
 import {downloadfile} from './download.mjs'
+import * as progress from 'multi-progress';
+
+let barmaker=new progress.default(process.stderr);
 
 import {versionConstraint,incompatible,anyVersion,constraint,VersionConstraint} from './version.mjs';
 
@@ -77,14 +82,31 @@ function downloadmod(mod,rversion,data){
     console.log('using cached',url);
     getmodfile=modpromises.get(url);
   }else{
-    getmodfile=gettempfile().then((tempfile)=>{
-      let p=downloadfile(url,tempfile);
+    let m=(tempfile)=>{
+      //let written=0;
+      let bar;
+      let p=downloadfile(url,tempfile,(length)=>{
+        console.log(length);
+        if(length){
+          bar=barmaker.newBar(' [:bar] :current/:total :percent :elapseds :etas :mod',{total:+length,width:30,clear:true});
+        }else{
+          bar=barmaker.newBar(' :current :percent :elapseds :mod',{total:0,clear:true});
+        }
+      },(data,length,filename,url)=>{
+        bar.tick(data.length,{mod:mod});
+      },(length,filename,url)=>{
+        bar.terminate();
+      });
       console.log('getting',url,tempfile);
-      modpromises.set(url,p.then(()=>tempfile));
+      modpromises.set(url,p.then(()=>tempfile).catch(()=>m(tempfile)));
       return modpromises.get(url);
-    });
+    };
+    getmodfile=gettempfile().then(m);
   }
-  return getmodfile.then((filename)=>unzip(filename,contentroot,dest));
+  return getmodfile.then((filename)=>{
+    console.log('unzipping',filename);
+    return unzip(filename,contentroot,dest);
+  });
 }
 
 function run(pack){
