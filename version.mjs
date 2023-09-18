@@ -5,18 +5,22 @@ import {downloadjson} from './downloadjson.mjs'
 function versionConstraint(version,mod,source) {
   // version is a string
 
-  let parts=version.split(' ');
   let optional=false;
-  switch(parts[0]){
-  case '!':
-    return incompatible(mod??parts[1],[source]);
-  case '?':
-  case '(?)':
-    optional=true;
-  case '~':
-    parts=parts.slice(1);
-  default:
+  if(version.startsWith('!')){
+    version=version.slice(1).trim();
+    let parts=version.split(' ');
+    return incompatible(mod??parts[0],[source]);
   }
+  if(version.startsWith('?')){
+    version=version.slice(1).trim();
+  }else if(version.startsWith('(?)')){
+    optional=true;
+    version=version.slice(3).trim();
+  }else if(version.startsWith('~')){
+    version=version.slice(1).trim();
+  }
+  let parts=version.split(' ');
+  console.log(version,mod,source,parts[1]);
   return constraint(mod??parts[0],[source],parts[1],parts[2],optional);
 }
 
