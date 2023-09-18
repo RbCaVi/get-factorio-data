@@ -1,6 +1,5 @@
 {
   "mods":{
-    "spaceexplorationdatachipaugmenter":{},
     "space-exploration":{},
     "aai-containers":{},
     "aai-industry":{},
@@ -18,5 +17,11 @@
     "informatron":{},
     "aai-signal-transmission":{},
     "simhelper":{},
+    "InserterFuelLeech":{},
+    "alien-biomes-hr-terrain":{},
+    "bullet-trails":{},
+    "grappling-gun":{},
+    "combat-mechanics-overhaul":{},
+    "equipment-gantry":{}
   }
 }
