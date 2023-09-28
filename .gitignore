@@ -1,6 +1,8 @@
 mods/
+m/
 oldmods/
 fdata.lua
 data.json
 modlocations.json
 modroots.json
+pack.json
