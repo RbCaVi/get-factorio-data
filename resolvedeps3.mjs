@@ -31,7 +31,7 @@ function geturl(mod,rversion,data){
     contentroot=`wube-factorio-data-${(''+rversion.ref).slice(0,7)}/${mod}`;
   }else{
     url=`https://mods-storage.re146.dev/${mod}/${version}.zip`;
-    contentroot=`${mod}_${version}`;
+    contentroot='';//`${mod}_${version}`;
   }
   dest=`mods/${mod}-${version}`;
 
