@@ -9,17 +9,16 @@ import {versionConstraint,incompatible,anyVersion,constraint,VersionConstraint} 
 //using a mods query
 //explicitly specify the mods you want with one version constraint
 
-function resolveAllMap(ps){
+async function resolveAllMap(ps){
   // ps is {key:promise ...}
   // returns a Promise that resolves to {key:promise value}
   // will reject with any error
   let values=new Map();
-  console.log(ps);
-  return [...ps.entries()].map(
-    ([k,p])=>p.then(data=>{values.set(k,data);})
-  ).reduce(
-    (p1,p2)=>p1.then(()=>p2)
-  ).then(()=>values);
+  for(let [k,p] of ps.entries()){
+    let data=await p;
+    values.set(k,data);
+  }
+  return values;
 }
 
 function geturl(mod,rversion,data){
@@ -123,4 +122,7 @@ let read=filename=>new Promise((resolve,reject)=>{
 
 let tee=x=>(console.log(x),x);
 
-read('pack.json').then(tee).then(JSON.parse).then(run);
+let s=await read('pack.json');
+console.log(s);
+let data=JSON.parse(s);
+let modlocations=await run(data);

@@ -108,38 +108,36 @@ class VersionConstraint{
     return true; // inside the range
   }
 
-  resolve(){
+  async resolve(){
     let url;
     if(this.mod=='core'||this.mod=='base'||this.mod=='core+base'){
       url='https://api.github.com/repos/wube/factorio-data/git/refs/tags';
     }else{
       url=`https://mods.factorio.com/api/mods/${this.mod}/full`;
     }
-    return downloadjson(url).then((data)=>{
-      let mdata;
-      if(this.mod=='core'||this.mod=='base'||this.mod=='core+base'){
-        //console.log(data);
-        for(let {ref:version,object:{sha:ref}} of data){
-          version=path.basename(version);
-          if(this.includes(version)&&cmpv(version,mdata?.version??'0.0.0')<0){
-            mdata={version:version,deps:[],ref:ref};
-          }
-        }
-      }else{
-        for(let {version:version,info_json:{dependencies:deps}} of data.releases){
-          if(this.includes(version)&&cmpv(version,mdata?.version??'0.0.0')<0){
-            mdata={version:version,deps:deps};
-          }
+    let data=await downloadjson(url);
+    let mdata;
+    if(this.mod=='core'||this.mod=='base'||this.mod=='core+base'){
+      for(let {ref:version,object:{sha:ref}} of data){
+        version=path.basename(version);
+        if(this.includes(version)&&cmpv(version,mdata?.version??'0.0.0')<0){
+          mdata={version:version,deps:[],ref:ref};
         }
       }
-      var resolved={};
-      resolved.deps=mdata.deps.map(dep=>versionConstraint(dep,null,this.mod)).map(v=>[v.mod,v]);
-      resolved.version=mdata.version;
-      resolved.ref=mdata.ref;
-      // make into a resolvedversion object
-      console.log(this.mod,resolved.deps,resolved.version)
-      return resolved;
-    });
+    }else{
+      for(let {version:version,info_json:{dependencies:deps}} of data.releases){
+        if(this.includes(version)&&cmpv(version,mdata?.version??'0.0.0')<0){
+          mdata={version:version,deps:deps};
+        }
+      }
+    }
+    var resolved={};
+    resolved.deps=mdata.deps.map(dep=>versionConstraint(dep,null,this.mod)).map(v=>[v.mod,v]);
+    resolved.version=mdata.version;
+    resolved.ref=mdata.ref;
+    // make into a resolvedversion object
+    console.log(this.mod,resolved.deps,resolved.version)
+    return resolved;
   }
 
   toString(){
