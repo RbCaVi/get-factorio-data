@@ -24,20 +24,6 @@ function makestack()
   return t
 end
 
-function scandir(directory)
-    local pfile = assert(io.popen(("find '%s' -mindepth 1 -maxdepth 1 -type d -printf '%%f\\0'"):format(directory), 'r'))
-    local list = pfile:read('*a')
-    pfile:close()
-
-    local folders = {}
-
-    for filename in string.gmatch(list, '[^%z]+') do
-        table.insert(folders, filename)
-    end
-
-    return folders
-end
-
 -- http://lua-users.org/lists/lua-l/2010-06/msg00313.html
 setfenv = setfenv or function(f, t)
   f = (type(f) == 'function' and f or debug.getinfo(f + 1, 'f').func)
@@ -66,7 +52,7 @@ function newrequire(requiredname)
     required=required:gsub('%.','/') .. '.lua'
   end
   
-  print(modsroot .. '/core/lualib/' .. required)
+  print(modroots['core'] .. '/lualib/' .. required)
 
   if required:match('^__.-__/') then
     print(1)
@@ -77,13 +63,13 @@ function newrequire(requiredname)
     print(3)
     if filepath:last() then
       local filedir=filepath:last():match("(.-)([^/]-[^%.]+)$")
-      if io.open(modsroot .. '/' .. modname:last() .. '/' .. filedir .. '/' .. required, 'r') then
+      if io.open(modroots[modname:last()] .. '/' .. filedir .. '/' .. required, 'r') then
         modname:push(modname:last())
         filepath:push(filedir .. '/' .. required)
-      elseif io.open(modsroot .. '/' .. modname:last() .. '/' .. required, 'r') then
+      elseif io.open(modroots[modname:last()] .. '/' .. required, 'r') then
         modname:push(modname:last())
         filepath:push(required)
-      elseif io.open(modsroot .. '/core/lualib/' .. required, 'r') then
+      elseif io.open(modroots['core'] .. '/lualib/' .. required, 'r') then
         print(2)
         modname:push('core')
         filepath:push('lualib/' .. required)
@@ -91,10 +77,10 @@ function newrequire(requiredname)
     print(modname:last(),filepath:last())
         error('no module named ' .. required)
       end
-    --elseif modname:last() and io.open(modsroot .. '/' .. modname:last() .. '/' .. required, 'r') then
+    --elseif modname:last() and io.open(modroots[mod]name:last() .. '/' .. required, 'r') then
     --  modname:push(modname:last())
     --  filepath:push(required)
-    elseif io.open(modsroot .. '/core/lualib/' .. required, 'r') then
+    elseif io.open(modroots['core'] .. '/lualib/' .. required, 'r') then
       print(2)
       modname:push('core')
       filepath:push('lualib/' .. required)
@@ -105,7 +91,7 @@ function newrequire(requiredname)
   end
   
   local result
-  local path=modsroot .. '/' .. modname:last() .. '/' .. filepath:last()
+  local path=modroots[modname:last()] .. '/' .. filepath:last()
   local mkey=path .. '@@' .. modname:last()
   if false and modules[mkey] then
     print('cached',path)
@@ -128,11 +114,12 @@ function newrequire(requiredname)
   return result
 end
 
-modsroot=arg[1]
+local f=io.open('modroots.json','r')
+modroots=json.decode(f:read('*a'))
+f:close()
+
 modname=makestack()
 filepath=makestack()
-
-local moddirs=scandir(modsroot)
 
 function table_size(t)
   local count=0
@@ -171,7 +158,7 @@ newenv={
   table_size=table_size,
 }
 
-local fdata=require(arg[2])
+local fdata=require('fdata')
 
 newenv.defines=fdata.defines
 
@@ -179,9 +166,9 @@ newenv._G=newenv
 
 local modinfo={}
 
-for _,mod in pairs(moddirs) do
-  print(modsroot .. '/' .. mod .. '/info.json')
-  local f=io.open(modsroot .. '/' .. mod .. '/info.json','r')
+for mod,modroot in pairs(modroots) do
+  print(modroot .. '/info.json')
+  local f=io.open(modroot .. '/info.json','r')
   local data=f:read('*a')
   f:close()
   local info=json.decode(data)
@@ -285,22 +272,22 @@ end
 
 -- settings stage
 for _,mod in ipairs(deps) do 
-  print(modsroot .. '/' .. mod .. '/settings.lua')
-  local f=io.open(modsroot .. '/' .. mod .. '/settings.lua','r')
+  print(modroots[mod] .. '/settings.lua')
+  local f=io.open(modroots[mod] .. '/settings.lua','r')
   if f then
     f:close()
     newrequire('__' .. mod .. '__.settings')
   end
 end
 for _,mod in ipairs(deps) do 
-  local f=io.open(modsroot .. '/' .. mod .. '/settings-updates.lua','r')
+  local f=io.open(modroots[mod] .. '/settings-updates.lua','r')
   if f then
     f:close()
     newrequire('__' .. mod .. '__.settings-updates')
   end
 end
 for _,mod in ipairs(deps) do 
-  local f=io.open(modsroot .. '/' .. mod .. '/settings-final-fixes.lua','r')
+  local f=io.open(modroots[mod] .. '/settings-final-fixes.lua','r')
   if f then
     f:close()
     newrequire('__' .. mod .. '__.settings-final-fixes')
@@ -391,7 +378,7 @@ function getsettingvalue(setting,value)
 end
 
 -- setup settings table
-local f=io.open(modsroot .. '/settings.json','r')
+local f=io.open('settings.json','r')
 local settingsdata
 if f then
   local data=f:read('*a')
@@ -425,21 +412,21 @@ newenv.settings=settings
 
 -- data stage
 for _,mod in ipairs(deps) do 
-  local f=io.open(modsroot .. '/' .. mod .. '/data.lua','r')
+  local f=io.open(modroots[mod] .. '/data.lua','r')
   if f then
     f:close()
     newrequire('__' .. mod .. '__.data')
   end
 end
 for _,mod in ipairs(deps) do 
-  local f=io.open(modsroot .. '/' .. mod .. '/data-updates.lua','r')
+  local f=io.open(modroots[mod] .. '/data-updates.lua','r')
   if f then
     f:close()
     newrequire('__' .. mod .. '__.data-updates')
   end
 end
 for _,mod in ipairs(deps) do 
-  local f=io.open(modsroot .. '/' .. mod .. '/data-final-fixes.lua','r')
+  local f=io.open(modroots[mod] .. '/data-final-fixes.lua','r')
   if f then
     f:close()
     newrequire('__' .. mod .. '__.data-final-fixes')
