@@ -33,9 +33,9 @@ function geturl(mod,rversion,data){
     url=`https://mods-storage.re146.dev/${mod}/${version}.zip`;
     contentroot=`${mod}_${version}`;
   }
-  dest=`mods/${mod}-${version}/${contentroot}`;
+  dest=`mods/${mod}-${version}`;
 
-  return [url,dest];
+  return [url,dest,contentroot];
 }
 
 async function run(pack){
@@ -99,14 +99,10 @@ async function run(pack){
   }
 
   let modlocations=[];
-  let finishedmods={};
-  for(let [mod,] of resolvedVersions){
-    finishedmods[mod]=false;
-  }
   for(let [mod,resolvedVersion] of resolvedVersions){
     console.log(mod, 'resolves to',resolvedVersion);
-    let [url,contentroot,dest]=geturl(mod,resolvedVersion,pack.mods[mod]);
-    modlocations.push([url,contentroot,dest]);
+    let location=geturl(mod,resolvedVersion,pack.mods[mod]);
+    modlocations.push(location);
   }
   console.log('downloading',modlocations);
   return modlocations;
@@ -115,9 +111,15 @@ async function run(pack){
 let read=filename=>new Promise((resolve,reject)=>{
   let s='';
   let f=fs.createReadStream(filename);
-  f.on('data',data=>{console.log(data);s+=data;});
+  f.on('data',data=>{s+=data;});
   f.on('end',()=>{resolve(s)});
   f.on('error',reject);
+});
+
+let write=(filename,data)=>new Promise((resolve,reject)=>{
+  let s='';
+  let f=fs.createWriteStream(filename);
+  f.write(data,resolve);
 });
 
 let tee=x=>(console.log(x),x);
@@ -126,3 +128,5 @@ let s=await read('pack.json');
 console.log(s);
 let data=JSON.parse(s);
 let modlocations=await run(data);
+let locations=JSON.stringify(modlocations);
+await write('modlocations.json',locations);
