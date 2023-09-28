@@ -102,7 +102,7 @@ async function run(pack){
   for(let [mod,resolvedVersion] of resolvedVersions){
     console.log(mod, 'resolves to',resolvedVersion);
     let location=geturl(mod,resolvedVersion,pack.mods[mod]);
-    modlocations.push(location);
+    modlocations.push([...location,mod,resolvedVersion.version]);
   }
   console.log('downloading',modlocations);
   return modlocations;
