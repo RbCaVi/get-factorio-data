@@ -18,6 +18,15 @@ group_by(.[0])|
 	.value[]|
 	"mkdir -p \""+.unzipto+"\"",
 	"unzip -d \""+.unzipto+"\" \"$tmpf\"",
-	if .root=="" then "mv \""+.unzipto+"\"/* \""+.unzipto+"/"+.defaultroot+"\"" else [][] end,
-	if .mod=="base" then "mkdir \""+.unzipto+"/"+.root+"\"/menu-simulations","cp menu-simulations.lua \""+.unzipto+"/"+.root+"\"/menu-simulations" else [][] end
+	if .root=="" then
+		"mv \""+.unzipto+"\"/* \""+.unzipto+"/"+.defaultroot+"\""
+	else
+		[][]
+	end,
+	if .mod=="base" then
+		"mkdir \""+.unzipto+"/"+.root+"\"/menu-simulations",
+		"cp menu-simulations.lua \""+.unzipto+"/"+.root+"\"/menu-simulations"
+	else
+		[][]
+	end
 )
