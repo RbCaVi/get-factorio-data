@@ -1,4 +1,4 @@
-import * as fs from 'node:fs';
+import * as file from './file.mjs';
 
 import {versionConstraint,incompatible,anyVersion,constraint,VersionConstraint} from './version.mjs';
 
@@ -108,25 +108,11 @@ async function run(pack){
   return modlocations;
 }
 
-let read=filename=>new Promise((resolve,reject)=>{
-  let s='';
-  let f=fs.createReadStream(filename);
-  f.on('data',data=>{s+=data;});
-  f.on('end',()=>{resolve(s)});
-  f.on('error',reject);
-});
-
-let write=(filename,data)=>new Promise((resolve,reject)=>{
-  let s='';
-  let f=fs.createWriteStream(filename);
-  f.write(data,resolve);
-});
-
 let tee=x=>(console.log(x),x);
 
-let s=await read('pack.json');
+let s=await file.read('pack.json');
 console.log(s);
 let data=JSON.parse(s);
 let modlocations=await run(data);
 let locations=JSON.stringify(modlocations);
-await write('modlocations.json',locations);
+await file.write('modlocations.json',locations);
