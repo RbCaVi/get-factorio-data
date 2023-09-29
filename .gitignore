@@ -1,6 +1,7 @@
 mods/
 m/
 oldmods/
+assets/
 fdata.lua
 data.json
 modlocations.json

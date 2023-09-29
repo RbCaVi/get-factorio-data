@@ -17,5 +17,8 @@ bash get-factorio-data.sh "$coreversion"
 # generate data.json
 lua gen.lua
 
+# copy mod assets (.png/.ogg) to another folder
+cat modlocations.json |jq --arg destmodroot assets --arg "$(cat factorioroot)" -fr tocpassets.jq|bash
+
 # generate locale.json
 node getlocale.js
