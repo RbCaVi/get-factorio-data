@@ -1,6 +1,6 @@
 import * as path from 'node:path'
 
-import {downloadjson} from './downloadjson.mjs'
+import {downloadjson} from './download.mjs'
 
 function versionConstraint(version,mod,source) {
   // version is a string

@@ -11,7 +11,7 @@ factorioroot=factorioroot.trim();
 let localefiles={};
 
 for(let [mod,root] of Object.entries(mods)){
-  if(mod=='base'||mod=='core'){
+  if(mod=='base'||mod=='core'){ // get locale from an installed factorio because they're not in factorio-data
     root=path.join(factorioroot,'data',mod);
   }
   const localedir = await fsPromises.opendir(path.join(root,'locale'));

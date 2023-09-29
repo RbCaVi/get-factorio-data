@@ -1,7 +1,7 @@
 # get pack.json
 
 # make modlocations.json
-node resolvedeps3.mjs
+node resolvedeps.mjs
 
 # make the wget script
 cat modlocations.json|jq -rf todownload.jq|bash
