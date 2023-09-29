@@ -19,13 +19,13 @@ group_by(.[0])|
 	"mkdir -p \""+.unzipto+"\"",
 	"unzip -d \""+.unzipto+"\" \"$tmpf\"",
 	if .root=="" then
-		"mv \""+.unzipto+"\"/* \""+.unzipto+"/"+.defaultroot+"\""
+		"mv \""+.unzipto+"\"/* \""+.unzipto+"/"+.defaultroot+"\"||true"
 	else
 		[][]
 	end,
 	if .mod=="base" then
 		"mkdir \""+.unzipto+"/"+.root+"\"/menu-simulations",
-		"cp menu-simulations.lua \""+.unzipto+"/"+.root+"\"/menu-simulations"
+		"cp \""+$root+"\"/menu-simulations.lua \""+.unzipto+"/"+.root+"\"/menu-simulations"
 	else
 		[][]
 	end

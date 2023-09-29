@@ -1,6 +1,8 @@
+root=$(dirname "$0")
+
 version=$1
 
-curl https://lua-api.factorio.com/${version}/runtime-api.json|jq -rf factorio-defines.jq>fdata.lua
+curl https://lua-api.factorio.com/${version}/runtime-api.json|jq -rf "$root"/factorio-defines.jq>fdata.lua
 
 (if test "$(curl -s -o /dev/null -I -w "%{http_code}" https://lua-api.factorio.com/${version}/prototype-api.json|head -c 1)" == 2; then
   curl https://lua-api.factorio.com/${version}/prototype-api.json
