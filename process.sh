@@ -16,3 +16,6 @@ bash get-factorio-data.sh "$coreversion"
 
 # generate data.json
 lua gen.lua
+
+# generate locale.json
+node getlocale.js
