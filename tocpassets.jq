@@ -5,7 +5,15 @@
 		if .[3]=="base" or .[3]=="core" then
 			$factorioroot+"/data/"+.[3]
 		else 
-			(.[1]+"/"+.[2])
+			(
+				.[1]+
+				"/"+
+				if .[2]=="" then
+					.[3]+"_"+.[4]
+				else
+					.[2]
+				end
+			)
 		end
 	)
 }
