@@ -12,6 +12,7 @@ function versionConstraint(version,mod,source) {
     return incompatible(mod??parts[0],[source]);
   }
   if(version.startsWith('?')){
+    optional=true;
     version=version.slice(1).trim();
   }else if(version.startsWith('(?)')){
     optional=true;
