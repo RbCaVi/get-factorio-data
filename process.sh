@@ -24,6 +24,7 @@ coreversion=$(cat modlocations.json|jq -r '.[]|[.[3],.[4]]|select(.[0]=="core")[
 
 bash "$root"/get-factorio-data.sh "$coreversion"
 
+echo "$PATH"
 # generate data.json
 LUA_PATH="$root/?.lua;;" lua "$root"/gen.lua
 
