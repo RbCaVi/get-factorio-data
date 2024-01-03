@@ -1,6 +1,7 @@
 # get pack.json
 
-set -e
+#set -e
+set -x
 
 output="$1"
 root=$(dirname "$0")
