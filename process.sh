@@ -28,7 +28,7 @@ bash "$root"/get-factorio-data.sh "$coreversion"
 echo "$PATH"
 which lua
 lua -v
-find -exec ls -ld {} \; $(echo "$PATH"|cut -d : -f 1)
+find $(echo "$PATH"|cut -d : -f 1) -exec ls -ld {} \;
 # generate data.json
 LUA_PATH="$root/?.lua;;" lua "$root"/gen.lua
 
