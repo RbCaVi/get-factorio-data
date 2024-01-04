@@ -20,6 +20,6 @@
 |"mkdir -p \""+$destmodroot+"/"+.mod+"\"",
 "outdir=$(realpath \""+$destmodroot+"/"+.mod+"\")",
 "pushd \""+.modroot+"\"",
-"find -name '*.png' -printf '%p\\n' -o -name '*.ogg' -printf '%p\\n'|cpio --pass-through --verbose --make-directories --link \"$outdir\"",
+"find -name '*.png' -printf '%p\\n' -o -name '*.ogg' -printf '%p\\n'|cpio --pass-through --make-directories --link \"$outdir\"",
 "popd",
 ""
