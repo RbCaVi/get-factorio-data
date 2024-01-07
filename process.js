@@ -13,18 +13,18 @@ async function resolveAllMap(ps){
   // ps is {key:promise ...}
   // returns a Promise that resolves to {key:promise value}
   // will reject with any error
-  let values=new Map();
-  for(let [k,p] of ps.entries()){
-    let data=await p;
+  const values=new Map();
+  for(const [k,p] of ps.entries()){
+    const data=await p;
     values.set(k,data);
   }
   return values;
 }
 
 function geturl(mod,rversion,data){
-  let version=rversion.version;
+  const version=rversion.version;
   //console.log(mod,version,data);
-  let url,contentroot,dest;
+  let url,contentroot;
 
   if(mod=='core'||mod=='base'){
     url=`https://api.github.com/repos/wube/factorio-data/zipball/${rversion.ref}`;
@@ -33,15 +33,15 @@ function geturl(mod,rversion,data){
     url=`https://mods-storage.re146.dev/${mod}/${version}.zip`;
     contentroot='';//`${mod}_${version}`;
   }
-  dest=`mods/${mod}-${version}`;
+  const dest=`mods/${mod}-${version}`;
 
   return [url,dest,contentroot];
 }
 
 async function run(pack){
-  let versions=new Map();
+  const versions=new Map();
 
-  for(let [mod,moddata] of Object.entries(pack.mods)){
+  for(const [mod,moddata] of Object.entries(pack.mods)){
     let version;
     if(moddata.version){
       version=versionConstraint('____ = '+moddata.version,mod,'__initial__');
@@ -66,22 +66,22 @@ async function run(pack){
   coreversion.mod='core+base';
   baseversion.mod='core+base';
   coreversion.intersect(baseversion);
-  let mergedversion=coreversion;
+  const mergedversion=coreversion;
   versions.set('base',mergedversion);
   versions.set('core',mergedversion);
   //versions.set('core+base',mergedversion);
 
 
-  let resolvedVersions=new Map();
-  for(let [mod,version] of versions){
+  const resolvedVersions=new Map();
+  for(const [mod,version] of versions){
     resolvedVersions.set(mod,version.resolve());
   }
 
   resolvedVersions=await resolveAllMap(resolvedVersions);
 
-  let errors=[];
-  for(let [mod,resolvedVersion] of resolvedVersions){
-    for(let [depmod,depversion] of resolvedVersion.deps){
+  const errors=[];
+  for(const [mod,resolvedVersion] of resolvedVersions){
+    for(const [depmod,depversion] of resolvedVersion.deps){
       if(!depversion.incompatible&&!depversion.optional&&!resolvedVersions.has(depmod)){
         errors.push(`Unresolved dependency: ${depmod} - needs version ${depversion}`)
       }
@@ -98,28 +98,27 @@ async function run(pack){
     throw new Error(errors);
   }
 
-  let modlocations=[];
-  for(let [mod,resolvedVersion] of resolvedVersions){
+  const modlocations=[];
+  for(const [mod,resolvedVersion] of resolvedVersions){
     console.log(mod, 'resolves to',resolvedVersion);
-    let location=geturl(mod,resolvedVersion,pack.mods[mod]);
+    const location=geturl(mod,resolvedVersion,pack.mods[mod]);
     modlocations.push([...location,mod,resolvedVersion.version]);
   }
   console.log('downloading',modlocations);
   return modlocations;
 }
 
-let tee=x=>(console.log(x),x);
+const tee=x=>(console.log(x),x);
 
-let packdata=await file.read('pack.json');
+const packdata=await file.read('pack.json');
 console.log(s);
-let pack=JSON.parse(s);
-let modlocations=await run(data);
+const pack=JSON.parse(s);
+const modlocations=await run(data);
 //let modlocationsdata=JSON.stringify(modlocations);
 //await file.write('modlocations.json',modlocationsdata);
 
 
-let factorioroot=await file.read('factorioroot.txt');
-factorioroot=factorioroot.trim();
+const factorioroot=await file.read('factorioroot.txt').trim();
 
 
 // https://stackoverflow.com/a/63497965
@@ -172,8 +171,8 @@ for(const [url,v] of groupedmods){
   }
 }
 
-let modroots={};
-for(let [,unzipto,root,mod,version] of modlocations){
+const modroots={};
+for(const [,unzipto,root,mod,version] of modlocations){
   modroots[mod]=unzipto+"/"+(root==""?`${mod}_${version}`:root);
 }
 
@@ -353,15 +352,15 @@ for(const [lang,langfiles] of Object.entries(localefiles)){
     const data=await file.read(langfile);
 
     let category;
-    for(let line of data.split(/\r?\n/)){
-      line=line.trim()
-      if(line==''||line.startsWith(';')||line.startsWith('#')){
+    for(const line of data.split(/\r?\n/)){
+      const trimmedline=line.trim()
+      if(trimmedline==''||trimmedline.startsWith(';')||trimmedline.startsWith('#')){
         continue;
       }
-      if(line.startsWith('[')&&line.endsWith(']')){
-        category=line.slice(1,-1);
+      if(trimmedline.startsWith('[')&&trimmedline.endsWith(']')){
+        category=trimmedline.slice(1,-1);
       }else{
-        let [key,value]=line.split('=',2)
+        const [key,value]=trimmedline.split('=',2)
         if(!category){
           locale[lang][key]=value;
         }else{
@@ -372,7 +371,7 @@ for(const [lang,langfiles] of Object.entries(localefiles)){
   }
 }
 
-//let localedata=JSON.stringify(locale);
+//const localedata=JSON.stringify(locale);
 //await file.write('locale.json',localedata);
 
 
