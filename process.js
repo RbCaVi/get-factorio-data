@@ -183,7 +183,6 @@ for(const [,unzipto,root,mod,version] of modlocations){
 
 
 
-version=coreversion
 
 const writestream=fs.createWriteStream("fdata.lua");
 
@@ -216,7 +215,7 @@ try{
     writestream.write("\n");
   }catch{
     // finally fall back to taking it from the factorio api
-    const runtimeapi=downloadjson(`https://lua-api.factorio.com/${version}/runtime-api.json`);
+    const runtimeapi=downloadjson(`https://lua-api.factorio.com/${coreversion}/runtime-api.json`);
     jq -rf "$root"/factorio-defines.jq>fdata.lua
 
     // defines is list
@@ -256,7 +255,7 @@ function writetypes(data,writestream) {
   writestream.write("}");
 }
 
-let res=await download.request(`https://lua-api.factorio.com/${version}/prototype-api.json`);
+let res=await download.request(`https://lua-api.factorio.com/${coreversion}/prototype-api.json`);
 if(!(res.statusCode>=200&&res.statusCode<300)){
   res=await download.request("https://lua-api.factorio.com/latest/prototype-api.json");
 }
