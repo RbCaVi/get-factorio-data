@@ -25,7 +25,7 @@ function geturl(mod,rversion,data){
   let version=rversion.version;
   //console.log(mod,version,data);
   let url,contentroot,dest;
-  
+
   if(mod=='core'||mod=='base'){
     url=`https://api.github.com/repos/wube/factorio-data/zipball/${rversion.ref}`;
     contentroot=`wube-factorio-data-${(''+rversion.ref).slice(0,7)}/${mod}`;
@@ -123,15 +123,13 @@ factorioroot=factorioroot.trim();
 
 
 // https://stackoverflow.com/a/63497965
-async function toArray(asyncIterator){ 
-    const arr=[]; 
-    for await(const i of asyncIterator) arr.push(i); 
+async function toArray(asyncIterator){
+    const arr=[];
+    for await(const i of asyncIterator) arr.push(i);
     return arr;
 }
 
 
-# make the wget script
-cat modlocations.json|jq --arg root "$root" -rf "$root"/todownload.jq|bash
 
 const groupedmods=new Map();
 for(const l of modlocations){
@@ -221,7 +219,7 @@ try{
     // finally fall back to taking it from the factorio api
     const runtimeapi=downloadjson(`https://lua-api.factorio.com/${version}/runtime-api.json`);
     jq -rf "$root"/factorio-defines.jq>fdata.lua
-  
+
     // defines is list
     function writedefines(defines,prefix,writestream) {
       for(const define of defines){
@@ -231,7 +229,8 @@ try{
           for(const {name} of define.values){
             const valuename=subprefix+"."+name;
             writestream.write(`${valuename}="${valuename}"\n`);
-            // like i could do it in numeric order like the actual defines but there are special cases
+            // like i could do it in numeric order like the actual defines
+            // but there are special cases i don't want to handle
             // this should be just a fallback
           }
         }else if("subkeys" in define){
@@ -241,7 +240,7 @@ try{
         }
       }
     }
-  
+
     writestream.write("local defines={}\n");
     writedefines(defines.defines,"defines",writestream);
     writestream.write("\n");
@@ -281,9 +280,6 @@ const savedluapath=process.env.LUA_PATH;
 
 child_process.spawn('lua',[`${__dirname}/gen.lua`],{stdio:'ignore'});
 process.env.LUA_PATH=savedluapath;
-
-# copy mod assets (.png/.ogg) to another folder
-cat modlocations.json |jq --arg destmodroot assets --arg factorioroot "$(cat factorioroot.txt)" -r -f "$root"/tocpassets.jq|bash
 
 // https://stackoverflow.com/a/45130990
 async function* getFiles(dir,basePath=".") {
