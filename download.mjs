@@ -1,4 +1,5 @@
 import * as https from 'node:https';
+import * as fs from 'node:fs';
 
 let headers={'User-Agent':'RbCaVi-SEJS'}
 
@@ -30,6 +31,19 @@ const download=(url,asString=false)=>new Promise((resolve,reject)=>
         const buffer = Buffer.concat(data);
         resolve(buffer);
       }
+    });
+  },reject)
+);
+
+const downloadToFile=(url,filename,asString=false)=>new Promise((resolve,reject)=>
+  requestRedirect(url).then((res) => {
+    const file = fs.createWriteStream(filename);
+    res.pipe(file);
+    file.on('finish', () => {
+      if (!res.complete){
+        reject('The connection was terminated while the message was still being sent');
+      }
+      resolve();
     });
   },reject)
 );
