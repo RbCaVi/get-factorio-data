@@ -123,9 +123,9 @@ const factorioroot=await file.read('factorioroot.txt').trim();
 
 // https://stackoverflow.com/a/63497965
 async function toArray(asyncIterator){
-    const arr=[];
-    for await(const i of asyncIterator) arr.push(i);
-    return arr;
+  const arr=[];
+  for await(const i of asyncIterator) arr.push(i);
+  return arr;
 }
 
 
@@ -246,8 +246,14 @@ try{
   }
 }
 
-jq -r '"local datatypes={",(.prototypes[]|select(.abstract|not)|"  \""+.typename+"\","),"}"'
 function writetypes(data,writestream) {
+  writestream.write("local datatypes={\n");
+  for(const prototype of data.prototypes){
+    if(!prototype.abstract){
+      writestream.write(`  "${prototype.typename}",\n`);
+    }
+  }
+  writestream.write("}");
 }
 
 let res=await download.request(`https://lua-api.factorio.com/${version}/prototype-api.json`);
