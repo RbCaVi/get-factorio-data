@@ -1,6 +1,15 @@
-import * as file from './file.mjs';
+/* jshint esversion: 11 */
+import * as fsPromises from 'node:fs/promises';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as child_process from 'node:child_process';
 
-import {versionConstraint,incompatible,anyVersion,constraint,VersionConstraint} from './version.mjs';
+import * as file from './file.mjs';
+import * as download from './download.mjs';
+import * as retry from './retry.mjs';
+import * as unzip from './unzip.mjs';
+
+import {versionConstraint,anyVersion} from './version.mjs';
 
 //version is an upper and lower bound
 //inclusive or exclusive
@@ -80,16 +89,16 @@ async function run(pack){
   resolvedVersions=await resolveAllMap(resolvedVersions);
 
   const errors=[];
-  for(const [mod,resolvedVersion] of resolvedVersions){
+  for(const [,resolvedVersion] of resolvedVersions){
     for(const [depmod,depversion] of resolvedVersion.deps){
       if(!depversion.incompatible&&!depversion.optional&&!resolvedVersions.has(depmod)){
-        errors.push(`Unresolved dependency: ${depmod} - needs version ${depversion}`)
+        errors.push(`Unresolved dependency: ${depmod} - needs version ${depversion}`);
       }
       if(depversion.incompatible&&depversion.includes(resolvedVersions.get(depmod)?.version)){
         if(depmod=='base'){
           resolvedVersions.delete('base');
         }else{
-          errors.push(`Incompatible version: ${depmod} - needs version ${depversion}`)
+          errors.push(`Incompatible version: ${depmod} - needs version ${depversion}`);
         }
       }
     }
@@ -108,12 +117,10 @@ async function run(pack){
   return modlocations;
 }
 
-const tee=x=>(console.log(x),x);
-
 const packdata=await file.read('pack.json');
-console.log(s);
-const pack=JSON.parse(s);
-const modlocations=await run(data);
+console.log(packdata);
+const pack=JSON.parse(packdata);
+const modlocations=await run(pack);
 //let modlocationsdata=JSON.stringify(modlocations);
 //await file.write('modlocations.json',modlocationsdata);
 
@@ -142,10 +149,10 @@ let coreversion;
 
 for(const [url,v] of groupedmods){
   const temp=$(mktemp) // get temp file name
-  retryifyAsync(download.downloadToFile)(url,temp);
+  retry.retryifyAsync(download.downloadToFile)(url,temp);
   for(const [,unzipto,vroot,mod,version] of v){
     let root=vroot;
-    const defaultroot=mod+"_"+version,
+    const defaultroot=mod+"_"+version;
     fsPromises.mkdir(unzipto,{recursive:true});
     unzip.unzip(temp,root,unzipto);
     if(root==""){
@@ -154,7 +161,7 @@ for(const [url,v] of groupedmods){
         fsPromises.rename(path.join(unzipto,files[0]),path.join(unzipto,defaultroot));
       }else if(files.includes(defaultroot));
       else{
-        throw `mod from ${url} didn't have an identifiable mod root`
+        throw `mod from ${url} didn't have an identifiable mod root`;
       }
       root=defaultroot;
     }
@@ -215,8 +222,7 @@ try{
     writestream.write("\n");
   }catch{
     // finally fall back to taking it from the factorio api
-    const runtimeapi=downloadjson(`https://lua-api.factorio.com/${coreversion}/runtime-api.json`);
-    jq -rf "$root"/factorio-defines.jq>fdata.lua
+    const runtimeapi=download.downloadjson(`https://lua-api.factorio.com/${version}/runtime-api.json`);
 
     // defines is list
     function writedefines(defines,prefix,writestream) {
@@ -240,7 +246,7 @@ try{
     }
 
     writestream.write("local defines={}\n");
-    writedefines(defines.defines,"defines",writestream);
+    writedefines(runtimeapi.defines,"defines",writestream);
     writestream.write("\n");
   }
 }
@@ -255,7 +261,7 @@ function writetypes(data,writestream) {
   writestream.write("}");
 }
 
-let res=await download.request(`https://lua-api.factorio.com/${coreversion}/prototype-api.json`);
+let res=await download.request(`https://lua-api.factorio.com/${version}/prototype-api.json`);
 if(!(res.statusCode>=200&&res.statusCode<300)){
   res=await download.request("https://lua-api.factorio.com/latest/prototype-api.json");
 }
@@ -299,17 +305,17 @@ async function* getFiles(dir,basePath=".") {
   }
 }
 
-modlocations.map(([,unzipto,root,mod,version])=>{
+modlocations.map(([,unzipto,root,mod,version])=>({
   mod,
   version,
   modroot:(mod=="base"||mod=="core")?`${factorioroot}/data/$(mod)`:modroots[mod]
-}).map(({mod,version,modroot})=>{
+})).map(({mod,version,modroot})=>{
   const outdir=`assets/${mod}_${version}`;
   fs.mkdir(outdir,{recursive:true});
   for await(const name of getFiles(modroot)){
     fsPromises.copyFile(`${modroot}/${name}`,`${outdir}/${name}`);
   }
-})
+});
 
 
 
@@ -336,7 +342,7 @@ for(const [mod,croot] of Object.entries(modroots)){
     }
     const lang=entry.name;
     if(!(lang in localefiles)){
-      localefiles[lang]=[]
+      localefiles[lang]=[];
     }
     const localedir = await fsPromises.opendir(path.join(root,'locale',lang));
     for await (const entry of localedir){
@@ -358,14 +364,14 @@ for(const [lang,langfiles] of Object.entries(localefiles)){
 
     let category;
     for(const line of data.split(/\r?\n/)){
-      const trimmedline=line.trim()
+      const trimmedline=line.trim();
       if(trimmedline==''||trimmedline.startsWith(';')||trimmedline.startsWith('#')){
         continue;
       }
       if(trimmedline.startsWith('[')&&trimmedline.endsWith(']')){
         category=trimmedline.slice(1,-1);
       }else{
-        const [key,value]=trimmedline.split('=',2)
+        const [key,value]=trimmedline.split('=',2);
         if(!category){
           locale[lang][key]=value;
         }else{
