@@ -1,6 +1,7 @@
 /* jshint esversion: 11 */
 import * as fsPromises from "node:fs/promises";
 import * as fs from "node:fs";
+import * as os from "node:os";
 import * as path from "node:path";
 import * as child_process from "node:child_process";
 
@@ -147,14 +148,19 @@ for(const l of modlocations){
 
 let coreversion;
 
+const tmpdir=await fsPromises.mkdtemp(path.join(os.tmpdir(), "factorio-data-"));
+const tmpcounts=new Map();
 for(const [url,v] of groupedmods){
-  const temp=$(mktemp); // get temp file name
-  retry.retryifyAsync(download.downloadToFile)(url,temp);
+  const mod=v[0][3];
+  const count=tmpcounts.get(mod)??0;
+  const tempfile=path.join(tmpdir,`${v[0][3]}-${count}`); // get temp file name /tmp/space-exploration (2)
+  tmpcounts.set(mod,count+1);
+  retry.retryifyAsync(download.downloadToFile)(url,tempfile);
   for(const [,unzipto,vroot,mod,version] of v){
     let root=vroot;
     const defaultroot=mod+"_"+version;
     fsPromises.mkdir(unzipto,{recursive:true});
-    unzip.unzip(temp,root,unzipto);
+    unzip.unzip(tempfile,root,unzipto);
     if(root==""){
       const files=(await toArray(await fsPromises.opendir(unzipto))).map(file=>file.name);
       if(files.length==1){
