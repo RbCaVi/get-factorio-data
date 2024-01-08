@@ -1,7 +1,21 @@
 {
   "mods":{
-    "aai-containers":{},
-    "aai-industry":{},
-    "InserterFuelLeech":{}
+    "space-exploration":{"version":"0.6.120"},
+    "aai-containers":{"version":"0.2.11"},
+    "aai-industry":{"version":"0.5.22"},
+    "alien-biomes":{"version":"0.6.8"},
+    "jetpack":{"version":"0.3.14"},
+    "robot_attrition":{"version":"0.5.15"},
+    "shield-projector":{"version":"0.1.6"},
+    "space-exploration-graphics":{"version":"0.6.16"},
+    "space-exploration-graphics-2":{"version":"0.6.1"},
+    "space-exploration-graphics-3":{"version":"0.6.2"},
+    "space-exploration-graphics-4":{"version":"0.6.3"},
+    "space-exploration-graphics-5":{"version":"0.6.1"},
+    "space-exploration-menu-simulations":{"version":"0.6.8"},
+    "space-exploration-postprocess":{"version":"0.6.27"},
+    "informatron":{"version":"0.3.4"},
+    "aai-signal-transmission":{"version":"0.4.9"},
+    "simhelper":{"version":"1.1.6"}
   }
 }
