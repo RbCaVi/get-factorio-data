@@ -168,7 +168,7 @@ function cmpv(v1,v2) {
     }
     if(v1s[i]>v2s[i]){
       return -1;
-    }else if(v1s[i]>v2s[i]){
+    }else if(v1s[i]<v2s[i]){
       return 1;
     }
   }
