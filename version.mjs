@@ -1,26 +1,26 @@
-import * as path from 'node:path'
+import * as path from "node:path";
 
-import {downloadjson} from './download.mjs'
+import {downloadjson} from "./download.mjs";
 
 function versionConstraint(version,mod,source) {
   // version is a string
 
   let optional=false;
-  if(version.startsWith('!')){
+  if(version.startsWith("!")){
     version=version.slice(1).trim();
-    let parts=version.split(' ');
+    let parts=version.split(" ");
     return incompatible(mod??parts[0],[source]);
   }
-  if(version.startsWith('?')){
+  if(version.startsWith("?")){
     optional=true;
     version=version.slice(1).trim();
-  }else if(version.startsWith('(?)')){
+  }else if(version.startsWith("(?)")){
     optional=true;
     version=version.slice(3).trim();
-  }else if(version.startsWith('~')){
+  }else if(version.startsWith("~")){
     version=version.slice(1).trim();
   }
-  let parts=version.split(' ');
+  let parts=version.split(" ");
   console.log(version,mod,source,parts[1]);
   return constraint(mod??parts[0],[source],parts[1],parts[2],optional);
 }
@@ -39,12 +39,12 @@ function constraint(mod,sources,ineq,version,optional){
   let bottomExc=null;
   let topExc=null;
   if(ineq){
-    if(ineq.includes('<')){
+    if(ineq.includes("<")){
       top=version;
-      topExc=!ineq.includes('=');
-    }else if(ineq.includes('>')){
+      topExc=!ineq.includes("=");
+    }else if(ineq.includes(">")){
       bottom=version;
-      bottomExc=!ineq.includes('=');
+      bottomExc=!ineq.includes("=");
     }else{
       top=version;
       topExc=false;
@@ -71,17 +71,17 @@ class VersionConstraint{
   // intersect in place
   intersect(that){
     if(this.mod!=that.mod){
-      throw new Error(`mod ${this.mod} not equal to ${that.mod}`)
+      throw new Error(`mod ${this.mod} not equal to ${that.mod}`);
     }
     if(this.incompatible&&that.incompatible){
       this.sources=this.sources.concat(that.sources);
       return;
     }
     if(this.incompatible&&!that.incompatible){
-      throw new Error(`mod ${this.mod} from ${this.sources} incompatible with ${that.sources}`)
+      throw new Error(`mod ${this.mod} from ${this.sources} incompatible with ${that.sources}`);
     }
     if((!this.incompatible)&&that.incompatible){
-      throw new Error(`mod ${that.mod} from ${that.sources} incompatible with ${this.sources}`)
+      throw new Error(`mod ${that.mod} from ${that.sources} incompatible with ${this.sources}`);
     }
     [this.bottomVersion,this.bottomExclude]=maxv([this.bottomVersion,this.bottomExclude],[that.bottomVersion,that.bottomExclude]);
     [this.topVersion,this.topExclude]=minv([this.topVersion,this.topExclude],[that.topVersion,that.topExclude]);
@@ -111,23 +111,23 @@ class VersionConstraint{
 
   async resolve(){
     let url;
-    if(this.mod=='core'||this.mod=='base'||this.mod=='core+base'){
-      url='https://api.github.com/repos/wube/factorio-data/git/refs/tags';
+    if(this.mod=="core"||this.mod=="base"||this.mod=="core+base"){
+      url="https://api.github.com/repos/wube/factorio-data/git/refs/tags";
     }else{
       url=`https://mods.factorio.com/api/mods/${this.mod}/full`;
     }
     let data=await downloadjson(url);
     let mdata;
-    if(this.mod=='core'||this.mod=='base'||this.mod=='core+base'){
+    if(this.mod=="core"||this.mod=="base"||this.mod=="core+base"){
       for(let {ref:version,object:{sha:ref}} of data){
         version=path.basename(version);
-        if(this.includes(version)&&cmpv(version,mdata?.version??'0.0.0')<0){
+        if(this.includes(version)&&cmpv(version,mdata?.version??"0.0.0")<0){
           mdata={version:version,deps:[],ref:ref};
         }
       }
     }else{
       for(let {version:version,info_json:{dependencies:deps}} of data.releases){
-        if(this.includes(version)&&cmpv(version,mdata?.version??'0.0.0')<0){
+        if(this.includes(version)&&cmpv(version,mdata?.version??"0.0.0")<0){
           mdata={version:version,deps:deps};
         }
       }
@@ -137,7 +137,7 @@ class VersionConstraint{
     resolved.version=mdata.version;
     resolved.ref=mdata.ref;
     // make into a resolvedversion object
-    console.log(this.mod,resolved.deps,resolved.version)
+    console.log(this.mod,resolved.deps,resolved.version);
     return resolved;
   }
 
@@ -145,14 +145,14 @@ class VersionConstraint{
     if(this.incompatible){
       return `! ${this.mod}`;
     }
-    let s=`${this.optional?'? ':''}${this.mod}`;
+    let s=`${this.optional?"? ":""}${this.mod}`;
     if(this.topVersion){
-      s+=` <${this.topExclude?'':'='} ${this.topVersion}`;
+      s+=` <${this.topExclude?"":"="} ${this.topVersion}`;
     }
     if(this.bottomVersion){
-      s+=` >${this.bottomExclude?'':'='} ${this.bottomVersion}`;
+      s+=` >${this.bottomExclude?"":"="} ${this.bottomVersion}`;
     }
-    s+=` (from ${this.sources.join(',')})`;
+    s+=` (from ${this.sources.join(",")})`;
     return s;
   }
 }
@@ -160,8 +160,8 @@ class VersionConstraint{
 // cmpv=v2-v1
 
 function cmpv(v1,v2) {
-  let v1s=v1.split('.').map(x=>+x);
-  let v2s=v2.split('.').map(x=>+x);
+  let v1s=v1.split(".").map(x=>+x);
+  let v2s=v2.split(".").map(x=>+x);
   for(let i=0;;i++){
     if(i>min(v1s.length,v2s.length)){
       return v2s.length-v1s.length;

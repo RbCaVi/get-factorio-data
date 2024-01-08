@@ -382,7 +382,7 @@ for(const [lang,langfiles] of Object.entries(localefiles)){
 }
 
 const localedata=JSON.stringify(locale);
-await file.write('locale.json',localedata);
+await file.write("locale.json",localedata);
 
 
 //mkdir "$output"
