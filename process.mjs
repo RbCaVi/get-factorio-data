@@ -109,7 +109,7 @@ async function run(pack){
   }
 
   const modlocations=[];
-  for(const [mod,resolvedVersion] of resolvedVersions){
+  for(const [mod,resolvedVersion] of resolved2Versions){
     console.log(mod, "resolves to",resolvedVersion);
     const location=geturl(mod,resolvedVersion,pack.mods[mod]);
     modlocations.push([...location,mod,resolvedVersion.version]);
@@ -126,7 +126,7 @@ const modlocations=await run(pack);
 //await file.write('modlocations.json',modlocationsdata);
 
 
-const factorioroot=await file.read("factorioroot.txt").trim();
+const factorioroot=(await file.read("factorioroot.txt")).trim();
 
 
 // https://stackoverflow.com/a/63497965
@@ -149,13 +149,15 @@ for(const l of modlocations){
 let coreversion;
 
 const tmpdir=await fsPromises.mkdtemp(path.join(os.tmpdir(), "factorio-data-"));
+console.log(tmpdir);
+//await fsPromises.mkdir(tmpdir);
 const tmpcounts=new Map();
 for(const [url,v] of groupedmods){
   const mod=v[0][3];
   const count=tmpcounts.get(mod)??0;
   const tempfile=path.join(tmpdir,`${v[0][3]}-${count}`); // get temp file name /tmp/space-exploration (2)
   tmpcounts.set(mod,count+1);
-  retry.retryifyAsync(download.downloadToFile)(url,tempfile);
+  await retry.retryifyAsync(download.downloadToFile)(url,tempfile);
   for(const [,unzipto,vroot,mod,version] of v){
     let root=vroot;
     const defaultroot=mod+"_"+version;
