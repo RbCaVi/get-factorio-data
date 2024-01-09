@@ -17,7 +17,6 @@ var unzip=(filename,contentroot,dest)=>new Promise(
       if (/\/$/.test(entry.fileName)) {
         zipfile.readEntry();
       } else {
-        console.log(path.normalize(entry.fileName),ncroot);
         if(!path.normalize(entry.fileName).startsWith(ncroot)){
           zipfile.readEntry();
           return;

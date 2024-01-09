@@ -162,7 +162,7 @@ for(const [url,v] of groupedmods){
     let root=vroot;
     const defaultroot=mod+"_"+version;
     fsPromises.mkdir(unzipto,{recursive:true});
-    unzip.unzip(tempfile,root,unzipto);
+    await unzip.unzip(tempfile,root,unzipto);
     if(root==""){
       const files=(await toArray(await fsPromises.opendir(unzipto))).map(file=>file.name);
       if(files.length==1){
