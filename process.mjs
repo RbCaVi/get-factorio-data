@@ -149,15 +149,17 @@ for(const l of modlocations){
 let coreversion;
 
 const tmpdir=await fsPromises.mkdtemp(path.join(os.tmpdir(), "factorio-data-"));
-console.log(tmpdir);
+console.log("temp location for zips:",tmpdir);
 //await fsPromises.mkdir(tmpdir);
 const tmpcounts=new Map();
 await Promise.all(groupedMods.entries().map(async ([key,[url,v]])=>{
   const mod=v[0][3];
   const count=tmpcounts.get(mod)??0;
-  const tempfile=path.join(tmpdir,`${v[0][3]}-${count}`); // get temp file name /tmp/space-exploration (2)
+  const tempfile=path.join(tmpdir,`${mod}-${count}`); // get temp file name /tmp/space-exploration (2)
   tmpcounts.set(mod,count+1);
+  console.log(`getting ${tempfile} from ${url} for ${mod}`);
   await retry.retryifyAsync(download.downloadToFile)(url,tempfile);
+  console.log(`downloaded ${tempfile} from ${url} for ${mod}`);
   await Promise.all(v.map(async ([,unzipto,vroot,mod,version])=>{
     let root=vroot;
     const defaultroot=mod+"_"+version;
