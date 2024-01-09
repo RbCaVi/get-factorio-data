@@ -24,10 +24,10 @@ async function resolveAllMap(ps){
   // returns a Promise that resolves to {key:promise value}
   // will reject with any error
   const values=new Map();
-  for(const [k,p] of ps.entries()){
+  await Promise.all(ps.entries().map(async ([k,p])=>{
     const data=await p;
     values.set(k,data);
-  }
+  }));
   return values;
 }
 
@@ -152,13 +152,13 @@ const tmpdir=await fsPromises.mkdtemp(path.join(os.tmpdir(), "factorio-data-"));
 console.log(tmpdir);
 //await fsPromises.mkdir(tmpdir);
 const tmpcounts=new Map();
-for(const [url,v] of groupedmods){
+await Promise.all(groupedMods.entries().map(async ([key,[url,v]])=>{
   const mod=v[0][3];
   const count=tmpcounts.get(mod)??0;
   const tempfile=path.join(tmpdir,`${v[0][3]}-${count}`); // get temp file name /tmp/space-exploration (2)
   tmpcounts.set(mod,count+1);
   await retry.retryifyAsync(download.downloadToFile)(url,tempfile);
-  for(const [,unzipto,vroot,mod,version] of v){
+  await Promise.all(v.map(async ([,unzipto,vroot,mod,version])=>{
     let root=vroot;
     const defaultroot=mod+"_"+version;
     fsPromises.mkdir(unzipto,{recursive:true});
@@ -183,8 +183,8 @@ for(const [url,v] of groupedmods){
     if(mod=="core"){
       coreversion=version;
     }
-  }
-}
+  }));
+}));
 
 const modroots={};
 for(const [,unzipto,root,mod,version] of modlocations){
