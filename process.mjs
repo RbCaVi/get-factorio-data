@@ -4,6 +4,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import * as child_process from "node:child_process";
+import { fileURLToPath } from 'node:url';
 
 import * as file from "./file.mjs";
 import * as download from "./download.mjs";
@@ -11,6 +12,10 @@ import * as retry from "./retry.mjs";
 import * as unzip from "./unzip.mjs";
 
 import {versionConstraint,anyVersion} from "./version.mjs";
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 //version is an upper and lower bound
 //inclusive or exclusive
@@ -24,7 +29,7 @@ async function resolveAllMap(ps){
   // returns a Promise that resolves to {key:promise value}
   // will reject with any error
   const values=new Map();
-  await Promise.all(ps.entries().map(async ([k,p])=>{
+  await Promise.all([...ps.entries()].map(async ([k,p])=>{
     const data=await p;
     values.set(k,data);
   }));
@@ -152,7 +157,7 @@ const tmpdir=await fsPromises.mkdtemp(path.join(os.tmpdir(), "factorio-data-"));
 console.log("temp location for zips:",tmpdir);
 //await fsPromises.mkdir(tmpdir);
 const tmpcounts=new Map();
-await Promise.all(groupedMods.entries().map(async ([key,[url,v]])=>{
+await Promise.all([...groupedmods.entries()].map(async ([url,v])=>{
   const mod=v[0][3];
   const count=tmpcounts.get(mod)??0;
   const tempfile=path.join(tmpdir,`${mod}-${count}`); // get temp file name /tmp/space-exploration (2)
@@ -161,10 +166,12 @@ await Promise.all(groupedMods.entries().map(async ([key,[url,v]])=>{
   await retry.retryifyAsync(download.downloadToFile)(url,tempfile);
   console.log(`downloaded ${tempfile} from ${url} for ${mod}`);
   await Promise.all(v.map(async ([,unzipto,vroot,mod,version])=>{
+    console.log(`unzipping ${tempfile} to ${unzipto} for ${mod}`);
     let root=vroot;
     const defaultroot=mod+"_"+version;
     fsPromises.mkdir(unzipto,{recursive:true});
     await unzip.unzip(tempfile,root,unzipto);
+    console.log(`unzipped ${tempfile} to ${unzipto} for ${mod}`);
     if(root==""){
       const files=(await toArray(await fsPromises.opendir(unzipto))).map(file=>file.name);
       if(files.length==1){
@@ -176,10 +183,10 @@ await Promise.all(groupedMods.entries().map(async ([key,[url,v]])=>{
       root=defaultroot;
     }
     if(mod=="base"){
-      await fsPromises.mkdir(path.join(unzipto,root,"menu-simulations"));
+      await fsPromises.mkdir(path.join(unzipto,"menu-simulations"));
       await fsPromises.copyFile(
-        path.join(factorioroot,"menu-simulations/menu-simulations.lua"),
-        path.join(unzipto,root,"menu-simulations/menu-simulations.lua")
+        path.join(factorioroot,"data/base/menu-simulations/menu-simulations.lua"),
+        path.join(unzipto,"menu-simulations/menu-simulations.lua")
       );
     }
     if(mod=="core"){
@@ -216,6 +223,7 @@ function writedefinesfromjson(defines,prefix,writestream) {
 }
 
 function writedefinesfromapi(defines,prefix,writestream) {
+  console.log("defines are",defines);
   for(const define of defines){
     const subprefix=prefix+"."+define.name;
     writestream.write(`${subprefix}={}\n`);
@@ -228,9 +236,7 @@ function writedefinesfromapi(defines,prefix,writestream) {
         // this should be just a fallback
       }
     }else if("subkeys" in define){
-      for(const subdefines of define.subkeys){
-        writedefinesfromapi(subdefines,subprefix,writestream);
-      }
+      writedefinesfromapi(define.subkeys,subprefix,writestream);
     }
   }
 }
@@ -243,21 +249,23 @@ try{
   writedefinesfromjson(defines.defines,"defines",writestream);
   writestream.write("\n");
 }catch{
-  try{
-    // try defines.lua
-    // from /c game.write_file("defines.lua", "local defines = " .. serpent.block(defines, {indent="    "}))
-    // (command from https://github.com/redruin1/factorio-draftsman/blob/main/draftsman/compatibility/defines.lua)
-    const readstream=fs.createReadStream("defines.lua");
-    readstream.pipe(writestream,{end:false});
+  // try defines.lua
+  // from /c game.write_file("defines.lua", "local defines = " .. serpent.block(defines, {indent="    "}))
+  // (command from https://github.com/redruin1/factorio-draftsman/blob/main/draftsman/compatibility/defines.lua)
+  const readstream=fs.createReadStream("defines.lua");
+  readstream.on('end', function(err) {
     writestream.write("\n");
-  }catch{
-    // finally fall back to taking it from the factorio api
-    const runtimeapi=download.downloadjson(`https://lua-api.factorio.com/${coreversion}/runtime-api.json`);
+  }).on('error', async function(err) {
+    // error meaning defines.lua didn't work
+    // so finally fall back to taking it from the factorio api
+    console.log(`getting runtime api for version ${coreversion}`);
+    const runtimeapi=await download.downloadjson(`https://lua-api.factorio.com/${coreversion}/runtime-api.json`);
+    console.log(`got runtime api for version ${coreversion}:`,runtimeapi);
 
     writestream.write("local defines={}\n");
     writedefinesfromapi(runtimeapi.defines,"defines",writestream);
     writestream.write("\n");
-  }
+  }).pipe(writestream,{end:false});
 }
 
 function writetypes(data,writestream) {
@@ -302,14 +310,16 @@ process.env.LUA_PATH=savedluapath;
 
 // https://stackoverflow.com/a/45130990
 async function* getFiles(dir,basePath=".") {
+  console.log('getting files',dir,basePath);
   const dirents = await fsPromises.readdir(dir, { withFileTypes: true });
   for (const dirent of dirents) {
     const name=path.join(dir, dirent.name);
+    console.log('got file',name,path.join(basePath,dirent.name),dirent.isDirectory());
     if (dirent.isDirectory()) {
       //yield name;
       yield* getFiles(name,path.join(basePath,dirent.name));
     } else {
-      yield name;
+      yield path.join(basePath,dirent.name);
     }
   }
 }
@@ -317,10 +327,10 @@ async function* getFiles(dir,basePath=".") {
 modlocations.map(([,,,mod,version])=>({
   mod,
   version,
-  modroot:(mod=="base"||mod=="core")?`${factorioroot}/data/$(mod)`:modroots[mod]
+  modroot:(mod=="base"||mod=="core")?`${factorioroot}/data/${mod}`:modroots[mod]
 })).map(async ({mod,version,modroot})=>{
   const outdir=`assets/${mod}_${version}`;
-  fs.mkdir(outdir,{recursive:true});
+  await fsPromises.mkdir(outdir,{recursive:true});
   for await(const name of getFiles(modroot)){
     fsPromises.copyFile(`${modroot}/${name}`,`${outdir}/${name}`);
   }
