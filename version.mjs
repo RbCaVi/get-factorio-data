@@ -57,7 +57,7 @@ function constraint(mod,sources,ineq,version,optional){
 }
 
 class VersionConstraint{
-  constructor(mod,sources,bottomVersion,topVersion,bottomExclude,topExclude,optional,incompatible){
+  constructor(mod,sources,bottomVersion,topVersion,bottomExclude,topExclude,optional,isIncompatible){
     this.mod=mod;
     this.sources=sources;
     this.bottomVersion=bottomVersion;
@@ -65,7 +65,7 @@ class VersionConstraint{
     this.bottomExclude=bottomExclude;
     this.topExclude=topExclude;
     this.optional=optional;
-    this.incompatible=incompatible;
+    this.incompatible=isIncompatible; // different name to avoid eslint error
   }
 
   // intersect in place
