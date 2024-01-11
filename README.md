@@ -1,4 +1,4 @@
-# lua-factorio-data
+# get-factorio-data
 Generate Factorio's data with JavaScript and Lua.
 
 Steps:
@@ -10,7 +10,7 @@ cd <directory>
 - Create a file called `pack.json` in that directory with the mods and their versions:
 ```
 {
-	"base":
+	"base":{}
 }
 ```
-- Run `bash <lua-factorio-data root>/process.sh <output directory>` to create a folder with `data.json`, `locale.json`, and `assets`
+- Run `node <get-factorio-data root>/process.js` to create `data.json`, `locale.json`, and `assets` in the folder
