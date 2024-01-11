@@ -173,6 +173,7 @@ await Promise.all([...groupedmods.entries()].map(async ([url,v])=>{
     await unzip.unzip(tempfile,root,unzipto);
     console.log(`unzipped ${tempfile} to ${unzipto} for ${mod}`);
     if(root==""){
+      console.log("unzip to",unzipto);
       const files=(await toArray(await fsPromises.opendir(unzipto))).map(file=>file.name);
       if(files.length==1){
         fsPromises.rename(path.join(unzipto,files[0]),path.join(unzipto,defaultroot));
@@ -243,19 +244,33 @@ function writedefinesfromapi(defines,prefix,writestream) {
 
 try{
   // first try json
+  console.log("trying defines.json");
   const defines=await import("defines.json");
 
   writestream.write("local ");
   writedefinesfromjson(defines.defines,"defines",writestream);
   writestream.write("\n");
+  console.log("defines.json succeeded");
 }catch{
-  // try defines.lua
-  // from /c game.write_file("defines.lua", "local defines = " .. serpent.block(defines, {indent="    "}))
-  // (command from https://github.com/redruin1/factorio-draftsman/blob/main/draftsman/compatibility/defines.lua)
-  const readstream=fs.createReadStream("defines.lua");
-  readstream.on('end', function(err) {
+  console.log("defines.json failed");
+  try{
+    console.log("trying defines.lua");
+    // try defines.lua
+    // from /c game.write_file("defines.lua", "local defines = " .. serpent.block(defines, {indent="    "}))
+    // (command from https://github.com/redruin1/factorio-draftsman/blob/main/draftsman/compatibility/defines.lua)
+    await new Promise((resolve,reject)=>{
+      const readstream=fs.createReadStream("defines.lua");
+      readstream.on("end", function() {
+        console.log("defines.lua succeeded");
+        resolve();
+      }).on("error", async function(err) {
+        console.log("defines.lua failed");
+        reject(err);
+      }).pipe(writestream,{end:false});
+    });
     writestream.write("\n");
-  }).on('error', async function(err) {
+  }catch{
+    console.log("fallback to factorio api");
     // error meaning defines.lua didn't work
     // so finally fall back to taking it from the factorio api
     console.log(`getting runtime api for version ${coreversion}`);
@@ -265,7 +280,7 @@ try{
     writestream.write("local defines={}\n");
     writedefinesfromapi(runtimeapi.defines,"defines",writestream);
     writestream.write("\n");
-  }).pipe(writestream,{end:false});
+  }
 }
 
 function writetypes(data,writestream) {
