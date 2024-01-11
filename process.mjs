@@ -4,7 +4,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import * as child_process from "node:child_process";
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath } from "node:url";
 
 import * as file from "./file.mjs";
 import * as download from "./download.mjs";
@@ -283,14 +283,14 @@ try{
   }
 }
 
-function writetypes(data,writestream) {
-  writestream.write("local datatypes={\n");
+function writetypes(data,stream) {
+  stream.write("local datatypes={\n");
   for(const prototype of data.prototypes){
     if(!prototype.abstract){
-      writestream.write(`  "${prototype.typename}",\n`);
+      stream.write(`  "${prototype.typename}",\n`);
     }
   }
-  writestream.write("}");
+  stream.write("}");
 }
 
 let res=await download.request(`https://lua-api.factorio.com/${coreversion}/prototype-api.json`);
@@ -325,11 +325,11 @@ process.env.LUA_PATH=savedluapath;
 
 // https://stackoverflow.com/a/45130990
 async function* getFiles(dir,basePath=".") {
-  console.log('getting files',dir,basePath);
+  console.log("getting files",dir,basePath);
   const dirents = await fsPromises.readdir(dir, { withFileTypes: true });
   for (const dirent of dirents) {
     const name=path.join(dir, dirent.name);
-    console.log('got file',name,path.join(basePath,dirent.name),dirent.isDirectory());
+    console.log("got file",name,path.join(basePath,dirent.name),dirent.isDirectory());
     if (dirent.isDirectory()) {
       //yield name;
       yield* getFiles(name,path.join(basePath,dirent.name));
@@ -378,8 +378,8 @@ for(const [mod,croot] of Object.entries(modroots)){
     if(!(lang in localefiles)){
       localefiles[lang]=[];
     }
-    const localedir = await fsPromises.opendir(path.join(root,"locale",lang));
-    for await (const entry of localedir){
+    const localelangdir = await fsPromises.opendir(path.join(root,"locale",lang));
+    for await (const entry of localelangdir){
       if(entry.name.endsWith(".cfg")){
         localefiles[lang].push(path.join(root,"locale",lang,entry.name));
       }
