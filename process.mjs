@@ -158,13 +158,13 @@ console.log("temp location for zips:",tmpdir);
 //await fsPromises.mkdir(tmpdir);
 const tmpcounts=new Map();
 await Promise.all([...groupedmods.entries()].map(async ([url,v])=>{
-  const mod=v[0][3];
-  const count=tmpcounts.get(mod)??0;
-  const tempfile=path.join(tmpdir,`${mod}-${count}`); // get temp file name /tmp/space-exploration (2)
-  tmpcounts.set(mod,count+1);
-  console.log(`getting ${tempfile} from ${url} for ${mod}`);
+  const firstmod=v[0][3];
+  const count=tmpcounts.get(firstmod)??0;
+  const tempfile=path.join(tmpdir,`${firstmod}-${count}`); // get temp file name /tmp/space-exploration (2)
+  tmpcounts.set(firstmod,count+1);
+  console.log(`getting ${tempfile} from ${url} for ${firstmod}`);
   await retry.retryifyAsync(download.downloadToFile)(url,tempfile);
-  console.log(`downloaded ${tempfile} from ${url} for ${mod}`);
+  console.log(`downloaded ${tempfile} from ${url} for ${firstmod}`);
   await Promise.all(v.map(async ([,unzipto,vroot,mod,version])=>{
     console.log(`unzipping ${tempfile} to ${unzipto} for ${mod}`);
     let root=vroot;
@@ -174,7 +174,7 @@ await Promise.all([...groupedmods.entries()].map(async ([url,v])=>{
     console.log(`unzipped ${tempfile} to ${unzipto} for ${mod}`);
     if(root==""){
       console.log("unzip to",unzipto);
-      const files=(await toArray(await fsPromises.opendir(unzipto))).map(file=>file.name);
+      const files=(await toArray(await fsPromises.opendir(unzipto))).map(dirent=>dirent.name);
       if(files.length==1){
         fsPromises.rename(path.join(unzipto,files[0]),path.join(unzipto,defaultroot));
       }else if(files.includes(defaultroot));
@@ -196,6 +196,9 @@ await Promise.all([...groupedmods.entries()].map(async ([url,v])=>{
   }));
 }));
 
+console.log("removing temp dir:",tmpdir);
+await fsPromises.rm(tmpdir,{recursive:true});
+
 const modroots={};
 for(const [,unzipto,root,mod,version] of modlocations){
   modroots[mod]=unzipto+"/"+(root==""?`${mod}_${version}`:root);
@@ -211,33 +214,33 @@ for(const [,unzipto,root,mod,version] of modlocations){
 
 const writestream=fs.createWriteStream("fdata.lua");
 
-function writedefinesfromjson(defines,prefix,writestream) {
-  writestream.write(`${prefix}={}\n`);
+function writedefinesfromjson(defines,prefix,stream) {
+  stream.write(`${prefix}={}\n`);
   for(const [name,value] of defines){
     const subprefix=prefix+"."+name;
     if(typeof value=="object"){
-      writedefinesfromjson(value,subprefix,writestream);
+      writedefinesfromjson(value,subprefix,stream);
     }else{
-      writestream.write(`${subprefix}=value\n`);
+      stream.write(`${subprefix}=value\n`);
     }
   }
 }
 
-function writedefinesfromapi(defines,prefix,writestream) {
+function writedefinesfromapi(defines,prefix,stream) {
   console.log("defines are",defines);
   for(const define of defines){
     const subprefix=prefix+"."+define.name;
-    writestream.write(`${subprefix}={}\n`);
+    stream.write(`${subprefix}={}\n`);
     if("values" in define){
       for(const {name} of define.values){
         const valuename=subprefix+"."+name;
-        writestream.write(`${valuename}="${valuename}"\n`);
+        stream.write(`${valuename}="${valuename}"\n`);
         // like i could do it in numeric order like the actual defines
         // but there are special cases i don't want to handle
         // this should be just a fallback
       }
     }else if("subkeys" in define){
-      writedefinesfromapi(define.subkeys,subprefix,writestream);
+      writedefinesfromapi(define.subkeys,subprefix,stream);
     }
   }
 }
@@ -299,7 +302,7 @@ if(!(res.statusCode>=200&&res.statusCode<300)){
 }
 
 const parts=[];
-const data=await new Promise((resolve,reject)=>
+const prototypedata=await new Promise((resolve,reject)=>
   res.on("data", (chunk) => {
     parts.push(chunk);
   }).on("end", () => {
@@ -311,7 +314,7 @@ const data=await new Promise((resolve,reject)=>
   })
 );
 
-writetypes(JSON.parse(data),writestream);
+writetypes(JSON.parse(prototypedata),writestream);
 
 writestream.write("\nreturn {defines=defines,types=datatypes}");
 writestream.close();
@@ -325,11 +328,11 @@ process.env.LUA_PATH=savedluapath;
 
 // https://stackoverflow.com/a/45130990
 async function* getFiles(dir,basePath=".") {
-  console.log("getting files",dir,basePath);
+  //console.log("getting files",dir,basePath);
   const dirents = await fsPromises.readdir(dir, { withFileTypes: true });
   for (const dirent of dirents) {
     const name=path.join(dir, dirent.name);
-    console.log("got file",name,path.join(basePath,dirent.name),dirent.isDirectory());
+    //console.log("got file",name,path.join(basePath,dirent.name),dirent.isDirectory());
     if (dirent.isDirectory()) {
       //yield name;
       yield* getFiles(name,path.join(basePath,dirent.name));
@@ -339,17 +342,21 @@ async function* getFiles(dir,basePath=".") {
   }
 }
 
-modlocations.map(([,,,mod,version])=>({
+await Promise.all(modlocations.map(([,,,mod,version])=>({
   mod,
   version,
   modroot:(mod=="base"||mod=="core")?`${factorioroot}/data/${mod}`:modroots[mod]
 })).map(async ({mod,version,modroot})=>{
   const outdir=`assets/${mod}_${version}`;
+  console.log("make dir",outdir);
   await fsPromises.mkdir(outdir,{recursive:true});
   for await(const name of getFiles(modroot)){
-    fsPromises.copyFile(`${modroot}/${name}`,`${outdir}/${name}`);
+    console.log("make dir",path.dirname(`${outdir}/${name}`));
+    await fsPromises.mkdir(path.dirname(`${outdir}/${name}`),{recursive:true});
+    console.log("copy",`${modroot}/${name}`,`${outdir}/${name}`);
+    await fsPromises.copyFile(`${modroot}/${name}`,`${outdir}/${name}`);
   }
-});
+}));
 
 
 
@@ -369,22 +376,26 @@ for(const [mod,croot] of Object.entries(modroots)){
   if(mod=="base"||mod=="core"){ // get locale from an installed factorio because they're not in factorio-data
     root=path.join(factorioroot,"data",mod);
   }
-  const localedir = await fsPromises.opendir(path.join(root,"locale"));
-  for await (const entry of localedir){
-    if(!entry.isDirectory()){
-      continue;
-    }
-    const lang=entry.name;
-    if(!(lang in localefiles)){
-      localefiles[lang]=[];
-    }
-    const localelangdir = await fsPromises.opendir(path.join(root,"locale",lang));
-    for await (const entry of localelangdir){
-      if(entry.name.endsWith(".cfg")){
-        localefiles[lang].push(path.join(root,"locale",lang,entry.name));
+  try{
+    const localedir = await fsPromises.opendir(path.join(root,"locale"));
+    for await (const langentry of localedir){
+      if(!langentry.isDirectory()){
+        continue;
       }
+      const lang=langentry.name;
+      if(!(lang in localefiles)){
+        localefiles[lang]=[];
+      }
+      try{
+        const localelangdir = await fsPromises.opendir(path.join(root,"locale",lang));
+        for await (const localeentry of localelangdir){
+          if(localeentry.name.endsWith(".cfg")){
+            localefiles[lang].push(path.join(root,"locale",lang,localeentry.name));
+          }
+        }
+      }catch{}
     }
-  }
+  }catch{}
 }
 
 console.log(localefiles);
