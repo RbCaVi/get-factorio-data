@@ -1,10 +1,7 @@
 mods/
-m/
-oldmods/
 assets/
 fdata.lua
 data.json
-modlocations.json
-modroots.json
 pack.json
 locale.json
+factorioroot.txt
