@@ -342,6 +342,10 @@ async function* getFiles(dir,basePath=".") {
   }
 }
 
+function isasset(filename) {
+  return filename.endsWith(".png");
+}
+
 await Promise.all(modlocations.map(([,,,mod,version])=>({
   mod,
   version,
@@ -351,10 +355,12 @@ await Promise.all(modlocations.map(([,,,mod,version])=>({
   console.log("make dir",outdir);
   await fsPromises.mkdir(outdir,{recursive:true});
   for await(const name of getFiles(modroot)){
-    console.log("make dir",path.dirname(`${outdir}/${name}`));
-    await fsPromises.mkdir(path.dirname(`${outdir}/${name}`),{recursive:true});
-    console.log("copy",`${modroot}/${name}`,`${outdir}/${name}`);
-    await fsPromises.copyFile(`${modroot}/${name}`,`${outdir}/${name}`);
+    if(isasset(name)){
+      console.log("make dir",path.dirname(`${outdir}/${name}`));
+      await fsPromises.mkdir(path.dirname(`${outdir}/${name}`),{recursive:true});
+      console.log("copy",`${modroot}/${name}`,`${outdir}/${name}`);
+      await fsPromises.copyFile(`${modroot}/${name}`,`${outdir}/${name}`);
+    }
   }
 }));
 
