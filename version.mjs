@@ -20,7 +20,7 @@ function versionConstraint(version,mod,source) {
   if(modifier.includes("?")){
     optional=true;
   }
-  console.log(version,mod,source,parts[1]);
+  console.log('versionConstraint',version,'from',source,'ineq',ineq);
   return constraint(mod,[source],ineq,versionnum,optional);
 }
 
@@ -51,6 +51,8 @@ function constraint(mod,sources,ineq,version,optional){
       bottomExc=false;
     }
   }
+
+  console.log('constraint',mod,ineq,version,'from',sources)
 
   return new VersionConstraint(mod,sources,bottom,top,bottomExc,topExc,optional,false);
 }
@@ -96,6 +98,8 @@ class VersionConstraint{
       return false;
     }
 
+    console.log('top',this.topVersion!=null&&cmpv(this.topVersion,version),'bottom',this.bottomVersion!=null&&cmpv(this.bottomVersion,version))
+
     if((this.topVersion!=null&&cmpv(this.topVersion,version)>0)||(this.bottomVersion!=null&&cmpv(this.bottomVersion,version)<0)){ // outside the range
       return false;
     }
@@ -126,6 +130,8 @@ class VersionConstraint{
       }
     }else{
       for(let {version:version,info_json:{dependencies:deps}} of data.releases){
+        console.log('does',this,'include',version);
+        console.log(this.includes(version))
         if(this.includes(version)&&cmpv(version,mdata?.version??"0.0.0")<0){
           mdata={version:version,deps:deps};
         }
