@@ -3,7 +3,7 @@ import * as path from "node:path";
 import * as fs from "node:fs";
 import * as fsPromises from "node:fs/promises";
 
-var unzip=(filename,contentroot,dest)=>new Promise(
+var unzip=(filename,contentroot,dest,filter=()=>true)=>new Promise(
   (resolve,reject)=>yauzl.open(filename, {lazyEntries: true}, async function(ziperror, zipfile) {
     if (ziperror) reject(ziperror);
     let ncroot=path.normalize(contentroot);
@@ -18,6 +18,10 @@ var unzip=(filename,contentroot,dest)=>new Promise(
         zipfile.readEntry();
       } else {
         if(!path.normalize(entry.fileName).startsWith(ncroot)){
+          zipfile.readEntry();
+          return;
+        }
+        if(!filter(entry.fileName)){
           zipfile.readEntry();
           return;
         }
