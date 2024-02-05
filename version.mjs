@@ -4,25 +4,25 @@ import {downloadjson} from "./download.mjs";
 
 function versionConstraint(version,mod,source) {
   // version is a string
+  version=version.trim();
 
   let optional=false;
   if(version.startsWith("!")){
     version=version.slice(1).trim();
-    let parts=version.split(" ");
-    return incompatible(mod??parts[0],[source]);
+    return incompatible(version,[source]);
   }
-  if(version.startsWith("?")){
+  // regex time
+  //               modifier (?), ?, ~     mod                   inequality              version
+  const regex=/^\s*(\?|\(\s*\?\s*\)|~|)\s*([a-zA-Z0-9\-_.]+)\s*(?:([><=]=|=[><=]|[><=])\s*(\d+\.\d+\.\d+))?\s*$/;
+  console.log(version);
+  const [,modifier,mod,ineq,versionnum]=regex.exec(version);
+
+  if(modifier.includes("?")){
     optional=true;
-    version=version.slice(1).trim();
-  }else if(version.startsWith("(?)")){
-    optional=true;
-    version=version.slice(3).trim();
-  }else if(version.startsWith("~")){
-    version=version.slice(1).trim();
   }
   let parts=version.split(" ");
   console.log(version,mod,source,parts[1]);
-  return constraint(mod??parts[0],[source],parts[1],parts[2],optional);
+  return constraint(mod,[source],ineq,versionnum,optional);
 }
 
 function incompatible(mod,sources){
