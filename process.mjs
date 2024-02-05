@@ -59,7 +59,7 @@ async function run(pack){
   for(const [mod,moddata] of Object.entries(pack.mods)){
     let version;
     if(moddata.version){
-      version=versionConstraint("____ = "+moddata.version,mod,"__initial__");
+      version=versionConstraint(`${mod} = ${moddata.version}`,"__initial__");
     }else{
       version=anyVersion(mod,"__initial__");
     }

@@ -2,7 +2,7 @@ import * as path from "node:path";
 
 import {downloadjson} from "./download.mjs";
 
-function versionConstraint(version,mod,source) {
+function versionConstraint(version,source) {
   // version is a string
   version=version.trim();
 
@@ -138,7 +138,7 @@ class VersionConstraint{
       }
     }
     var resolved={};
-    resolved.deps=mdata.deps.map(dep=>versionConstraint(dep,null,this.mod)).map(v=>[v.mod,v]);
+    resolved.deps=mdata.deps.map(dep=>versionConstraint(dep,this.mod)).map(v=>[v.mod,v]);
     resolved.version=mdata.version;
     resolved.ref=mdata.ref;
     // make into a resolvedversion object
