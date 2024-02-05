@@ -97,13 +97,13 @@ class VersionConstraint{
       return false;
     }
 
-    if((this.top!=null&&cmpv(this.top,version)>0)||(this.bottom!=null&&cmpv(this.bottom,version)<0)){ // outside the range
+    if((this.topVersion!=null&&cmpv(this.topVersion,version)>0)||(this.bottomVersion!=null&&cmpv(this.bottomVersion,version)<0)){ // outside the range
       return false;
     }
-    if((this.top!=null&&cmpv(this.top,version)==0)){ // equal to top
+    if((this.topVersion!=null&&cmpv(this.topVersion,version)==0)){ // equal to top
       return !this.topExclude;
     }
-    if((this.bottom!=null&&cmpv(this.bottom,version)==0)){ // equal to bottom
+    if((this.bottomVersion!=null&&cmpv(this.bottomVersion,version)==0)){ // equal to bottom
       return !this.bottomExclude;
     }
     return true; // inside the range
