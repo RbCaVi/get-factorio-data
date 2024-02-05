@@ -148,9 +148,9 @@ class VersionConstraint{
 
   toString(){
     if(this.incompatible){
-      return `! ${this.mod}`;
+      return `(! ${this.mod})`;
     }
-    let s=`${this.optional?"? ":""}${this.mod}`;
+    let s=`(${this.optional?"? ":""}${this.mod}`;
     if(this.topVersion){
       s+=` <${this.topExclude?"":"="} ${this.topVersion}`;
     }
@@ -158,7 +158,7 @@ class VersionConstraint{
       s+=` >${this.bottomExclude?"":"="} ${this.bottomVersion}`;
     }
     s+=` (from ${this.sources.join(",")})`;
-    return s;
+    return s+')';
   }
 }
 
