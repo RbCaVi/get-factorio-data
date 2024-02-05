@@ -20,7 +20,6 @@ function versionConstraint(version,mod,source) {
   if(modifier.includes("?")){
     optional=true;
   }
-  let parts=version.split(" ");
   console.log(version,mod,source,parts[1]);
   return constraint(mod,[source],ineq,versionnum,optional);
 }
