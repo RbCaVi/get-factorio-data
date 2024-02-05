@@ -46,4 +46,38 @@ var unzip=(filename,contentroot,dest,filter=()=>true)=>new Promise(
   })
 );
 
-export {unzip};
+var unzipStreams=(filename,contentroot,dest,filter=()=>true)=>new Promise(
+  (resolve,reject)=>{
+    const entries=new Map();
+    // lazyEntries isn't needed because the caller opens the streams 
+    return yauzl.open(filename, async function(ziperror, zipfile) {
+      if (ziperror) reject(ziperror);
+      let ncroot=path.normalize(contentroot);
+      let contentrootlength=ncroot.split(path.sep).length;
+      if(ncroot=="."){
+        ncroot="";
+        contentrootlength=0;
+      }
+      zipfile.readEntry();
+      zipfile.on("entry", function(entry) {
+        if (!(/\/$/.test(entry.fileName))) {
+          if(!path.normalize(entry.fileName).startsWith(ncroot)){
+            return;
+          }
+          if(!filter(entry.fileName)){
+            return;
+          }
+          const pathComponents = path.normalize(entry.fileName).split(path.sep);
+          const fname=path.join(...pathComponents.slice(contentrootlength));
+          // a function that when called resolves to a read stream
+          entries.set(fname,()=>util.promisify(zipfile.openReadStream)(entry));
+        }
+      }).once("end",()=>{
+        //zipfile.close(); // don't close until all files have been read
+        resolve({zipfile,entries});
+      });
+    })
+  }
+);
+
+export {unzip,unzipStreams};
