@@ -156,6 +156,50 @@ let coreversion;
 const tmpdir=await fsPromises.mkdtemp(path.join(os.tmpdir(), "factorio-data-"));
 console.log("temp location for zips:",tmpdir);
 //await fsPromises.mkdir(tmpdir);
+
+[...groupedmods.entries()].map(async ([url,v])=>{
+  const firstmod=v[0][3];
+  const count=tmpcounts.get(firstmod)??0;
+  const tempfile=path.join(tmpdir,`${firstmod}-${count}`); // get temp file name /tmp/space-exploration (2)
+  tmpcounts.set(firstmod,count+1);
+  console.log(`getting ${tempfile} from ${url} for ${firstmod}`);
+  // await retry.retryifyAsync(download.downloadToFile)(url,tempfile); // do not
+  console.log(`downloaded ${tempfile} from ${url} for ${firstmod}`);
+  await Promise.all(v.map(async ([,unzipto,vroot,mod,version])=>{
+    console.log(`unzipping ${tempfile} to ${unzipto} for ${mod}`);
+    let root=vroot;
+    const defaultroot=mod+"_"+version;
+    fsPromises.mkdir(unzipto,{recursive:true}); // do not
+    // await unzip.unzip(tempfile,root,unzipto); // do not
+    // const entries=await unzip.getStreams(tempfile,root)
+    console.log(`unzipped ${tempfile} to ${unzipto} for ${mod}`);
+    if(root==""){
+      console.log("unzip to",unzipto);
+      const files=(await toArray(await fsPromises.opendir(unzipto))).map(dirent=>dirent.name);
+      // entries.entries.values.map(getrootname)
+      if(files.length==1){
+        // fsPromises.rename(path.join(unzipto,files[0]),path.join(unzipto,defaultroot));
+        // const file=files[0]
+        entries.entries=entries.entries.
+      }else if(files.includes(defaultroot));
+      else{
+        throw `mod from ${url} didn't have an identifiable mod root`;
+      }
+      root=defaultroot;
+    }
+    if(mod=="base"){
+      // await fsPromises.mkdir(path.join(unzipto,"menu-simulations"));
+      // await fsPromises.copyFile(
+      //   path.join(factorioroot,"data/base/menu-simulations/menu-simulations.lua"),
+      //   path.join(unzipto,"menu-simulations/menu-simulations.lua")
+      // );
+    }
+    if(mod=="core"){
+      coreversion=version;
+    }
+  }));
+})
+
 const tmpcounts=new Map();
 await Promise.all([...groupedmods.entries()].map(async ([url,v])=>{
   const firstmod=v[0][3];
