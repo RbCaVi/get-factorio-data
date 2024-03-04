@@ -220,7 +220,7 @@ await Promise.all([...groupedmods.entries()].map(async ([url,v])=>{
   console.log(`getting ${tempfile} from ${url} for ${firstmod}`);
   await retry.retryifyAsync(download.downloadToFile)(url,tempfile);
   console.log(`downloaded ${tempfile} from ${url} for ${firstmod}`);
-  await Promise.all(v.map(async ([,unzipto,vroot,mod,version])=>{
+  await Promise.all(v.map(async ([,unzipto,vroot,mod,version],i)=>{
     console.log(`unzipping ${tempfile} to ${unzipto} for ${mod}`);
     let root=vroot;
     const defaultroot=mod+"_"+version;
@@ -237,6 +237,9 @@ await Promise.all([...groupedmods.entries()].map(async ([url,v])=>{
         throw `mod from ${url} didn't have an identifiable mod root`;
       }
       root=defaultroot;
+      v[i][2]=defaultroot;
+    }else{
+      v[i][2]='';
     }
     if(mod=="base"){
       await fsPromises.mkdir(path.join(unzipto,"menu-simulations"),{recursive:true});
@@ -256,10 +259,11 @@ await fsPromises.rm(tmpdir,{recursive:true});
 
 const modroots={};
 for(const [,unzipto,root,mod,version] of modlocations){
-  modroots[mod]=unzipto+"/"+(root==""?`${mod}_${version}`:root);
+  modroots[mod]=unzipto+"/"+root;
 }
 
-
+const modrootsdata=JSON.stringify(modroots);
+await file.write("modroots.json",modrootsdata);
 
 
 
@@ -268,6 +272,8 @@ for(const [,unzipto,root,mod,version] of modlocations){
 
 
 const writestream=fs.createWriteStream("fdata.lua");
+
+const writestreamfd=new Promise((res)=>writestream.on('open',res));
 
 function writedefinesfromjson(defines,prefix,stream) {
   stream.write(`${prefix}={}\n`);
@@ -372,13 +378,18 @@ const prototypedata=await new Promise((resolve,reject)=>
 writetypes(JSON.parse(prototypedata),writestream);
 
 writestream.write("\nreturn {defines=defines,types=datatypes}");
-writestream.close();
+
+fs.fsyncSync(await writestreamfd);
+
+await new Promise((res,rej)=>{
+  writestream.close(res);
+})
 
 
 // generate data.json
 const savedluapath=process.env.LUA_PATH;
 
-process.env.LUA_PATH=__dirname+'/?.lua';
+process.env.LUA_PATH=__dirname+'/?.lua;./?.lua';
 
 //const luaproc=child_process.spawn("lua",[`${__dirname}/gen.lua`],{stdio:"inherit"});
 const luaproc=child_process.spawnSync("lua",[`${__dirname}/gen.lua`],{stdio:"inherit"});
@@ -415,7 +426,7 @@ await Promise.all(modlocations.map(([,,,mod,version])=>({
   version,
   modroot:(mod=="base"||mod=="core")?`${factorioroot}/data/${mod}`:modroots[mod]
 })).map(async ({mod,version,modroot})=>{
-  const outdir=`assets/${mod}_${version}`;
+  const outdir=`assets/${mod}`; // sejs isn't built for mod_version yet
   //console.log("make dir",outdir);
   await fsPromises.mkdir(outdir,{recursive:true});
   for await(const name of getFiles(modroot)){
