@@ -166,7 +166,8 @@ function getrootname(p) {
   return last;
 }
 
-
+// only helps if i have builtin lua
+/*
 const tmpcounts2=new Map();
 [...groupedmods.entries()].map(async ([url,v])=>{
   const firstmod=v[0][3];
@@ -208,6 +209,7 @@ const tmpcounts2=new Map();
     }
   }));
 })
+*/
 
 const tmpcounts=new Map();
 await Promise.all([...groupedmods.entries()].map(async ([url,v])=>{
