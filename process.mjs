@@ -497,7 +497,9 @@ for(const [lang,langfiles] of Object.entries(localefiles)){
       if(trimmedline.startsWith("[")&&trimmedline.endsWith("]")){
         category=trimmedline.slice(1,-1);
       }else{
-        const [key,value]=trimmedline.split("=",2);
+        const equalindex=trimmedline.indexOf('=');
+        const key=trimmedline.slice(0,equalindex);
+        const value=trimmedline.slice(equalindex+1);
         if(!category){
           locale[lang][key]=value;
         }else{
