@@ -239,7 +239,7 @@ await Promise.all([...groupedmods.entries()].map(async ([url,v])=>{
       root=defaultroot;
     }
     if(mod=="base"){
-      await fsPromises.mkdir(path.join(unzipto,"menu-simulations"));
+      await fsPromises.mkdir(path.join(unzipto,"menu-simulations"),{recursive:true});
       await fsPromises.copyFile(
         path.join(factorioroot,"data/base/menu-simulations/menu-simulations.lua"),
         path.join(unzipto,"menu-simulations/menu-simulations.lua")
