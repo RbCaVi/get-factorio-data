@@ -433,6 +433,8 @@ for _,mod in ipairs(deps) do
   end
 end
 
+print('done')
+
 -- dump to file
 local f=io.open('data.json','w')
 local data=json.encode(newenv.data.raw)
