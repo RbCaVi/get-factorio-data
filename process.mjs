@@ -282,7 +282,7 @@ function writedefinesfromjson(defines,prefix,stream) {
 }
 
 function writedefinesfromapi(defines,prefix,stream) {
-  console.log("defines are",defines);
+  //console.log("defines are",defines);
   for(const define of defines){
     const subprefix=prefix+"."+define.name;
     stream.write(`${subprefix}={}\n`);
@@ -407,13 +407,13 @@ await Promise.all(modlocations.map(([,,,mod,version])=>({
   modroot:(mod=="base"||mod=="core")?`${factorioroot}/data/${mod}`:modroots[mod]
 })).map(async ({mod,version,modroot})=>{
   const outdir=`assets/${mod}_${version}`;
-  console.log("make dir",outdir);
+  //console.log("make dir",outdir);
   await fsPromises.mkdir(outdir,{recursive:true});
   for await(const name of getFiles(modroot)){
     if(isasset(name)){
-      console.log("make dir",path.dirname(`${outdir}/${name}`));
+      //console.log("make dir",path.dirname(`${outdir}/${name}`));
       await fsPromises.mkdir(path.dirname(`${outdir}/${name}`),{recursive:true});
-      console.log("copy",`${modroot}/${name}`,`${outdir}/${name}`);
+      //console.log("copy",`${modroot}/${name}`,`${outdir}/${name}`);
       await fsPromises.copyFile(`${modroot}/${name}`,`${outdir}/${name}`);
     }
   }
@@ -459,7 +459,7 @@ for(const [mod,croot] of Object.entries(modroots)){
   }catch{}
 }
 
-console.log(localefiles);
+//console.log(localefiles);
 
 const locale={};
 
@@ -492,6 +492,6 @@ const localedata=JSON.stringify(locale);
 await file.write("locale.json",localedata);
 
 
-//mkdir "$output"
+// mkdir "$output"
 
-//mv assets data.json locale.json "$output"
+// mv assets data.json locale.json "$output"

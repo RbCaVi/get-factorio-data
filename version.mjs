@@ -98,7 +98,7 @@ class VersionConstraint{
       return false;
     }
 
-    console.log('top',this.topVersion!=null&&cmpv(this.topVersion,version),'bottom',this.bottomVersion!=null&&cmpv(this.bottomVersion,version))
+    //console.log('top',this.topVersion!=null&&cmpv(this.topVersion,version),'bottom',this.bottomVersion!=null&&cmpv(this.bottomVersion,version))
 
     if((this.topVersion!=null&&cmpv(this.topVersion,version)>0)||(this.bottomVersion!=null&&cmpv(this.bottomVersion,version)<0)){ // outside the range
       return false;
@@ -142,7 +142,7 @@ class VersionConstraint{
     resolved.version=mdata.version;
     resolved.ref=mdata.ref;
     // make into a resolvedversion object
-    console.log(this.mod,resolved.deps,resolved.version);
+    //console.log(this.mod,resolved.deps,resolved.version);
     return resolved;
   }
 
