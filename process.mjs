@@ -378,7 +378,16 @@ writestream.close();
 // generate data.json
 const savedluapath=process.env.LUA_PATH;
 
-child_process.spawn("lua",[`${__dirname}/gen.lua`],{stdio:"ignore"});
+process.env.LUA_PATH=__dirname+'/?.lua';
+
+//const luaproc=child_process.spawn("lua",[`${__dirname}/gen.lua`],{stdio:"inherit"});
+const luaproc=child_process.spawnSync("lua",[`${__dirname}/gen.lua`],{stdio:"inherit"});
+/*
+await new Promise((res,rej)=>{
+  luaproc.on('error',rej);
+  luaproc.on('close',res);
+})
+*/
 process.env.LUA_PATH=savedluapath;
 
 // https://stackoverflow.com/a/45130990
