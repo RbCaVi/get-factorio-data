@@ -12,8 +12,8 @@ function versionConstraint(version,source) {
     return incompatible(version,[source]);
   }
   // regex time
-  //               modifier (?), ?, ~     mod                   inequality              version
-  const regex=/^\s*(\?|\(\s*\?\s*\)|~|)\s*([a-zA-Z0-9\-_.]+)\s*(?:([><=]=|=[><=]|[><=])\s*(\d+\.\d+\.\d+))?\s*$/;
+  //               modifier (?), ?, ~     mod                      inequality              version
+  const regex=/^\s*(\?|\(\s*\?\s*\)|~|)\s*([a-zA-Z0-9\-_. ]+)\s*(?:([><=]=|=[><=]|[><=])\s*(\d+\.\d+(\.\d+)?))?\s*$/;
   console.log(version);
   const [,modifier,mod,ineq,versionnum]=regex.exec(version);
 
