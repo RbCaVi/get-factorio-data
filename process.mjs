@@ -418,7 +418,10 @@ async function* getFiles(dir,basePath=".") {
 }
 
 function isasset(filename) {
-  return filename.endsWith(".png");
+  return (
+    filename.endsWith(".png")|| // images
+    filename.endsWith(".ttf")   // fonts
+  );
 }
 
 await Promise.all(modlocations.map(([,,,mod,version])=>({
