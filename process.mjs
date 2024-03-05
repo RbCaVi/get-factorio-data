@@ -510,9 +510,15 @@ for(const [lang,langfiles] of Object.entries(localefiles)){
   }
 }
 
-const localedata=JSON.stringify(locale);
-await file.write("locale.json",localedata);
+const outdir=pack.name??'mod';
 
+fsPromises.mkdir(outdir);
+
+const localedata=JSON.stringify(locale);
+await file.write(path.join(outdir,"locale.json"),localedata);
+
+fsPromises.rename('assets',path.join(outdir,'assets'));
+fsPromises.rename('data.json',path.join(outdir,'data.json'));
 
 // mkdir "$output"
 
