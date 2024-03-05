@@ -517,7 +517,7 @@ for(const [lang,langfiles] of Object.entries(localefiles)){
       }
     }
   }
-  if(localeinfos[lang].?font!=undefined){
+  if(localeinfos[lang]?.font!=undefined){
     fonts[lang]=localeinfos[lang].font;
   }else{
     fonts[lang]={};
