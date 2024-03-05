@@ -451,6 +451,7 @@ await Promise.all(modlocations.map(([,,,mod,version])=>({
 
 
 const localefiles={};
+const localeinfos={};
 
 for(const [mod,croot] of Object.entries(modroots)){
   let root=croot;
@@ -473,6 +474,9 @@ for(const [mod,croot] of Object.entries(modroots)){
           if(localeentry.name.endsWith(".cfg")){
             localefiles[lang].push(path.join(root,"locale",lang,localeentry.name));
           }
+          if(localeentry.name=='info.json'){
+            localeinfos[lang]=path.join(root,"locale",lang,localeentry.name);
+          }
         }
       }catch{}
     }
@@ -482,9 +486,11 @@ for(const [mod,croot] of Object.entries(modroots)){
 //console.log(localefiles);
 
 const locale={};
+const fonts={}
 
 for(const [lang,langfiles] of Object.entries(localefiles)){
   locale[lang]={};
+  fonts[lang]={};
   for(const langfile of langfiles){
     const data=await file.read(langfile);
 
@@ -508,6 +514,15 @@ for(const [lang,langfiles] of Object.entries(localefiles)){
       }
     }
   }
+  if(localeinfos[lang].?font!=undefined){
+    fonts[lang]=localeinfos[lang].font;
+  }else{
+    fonts[lang]={};
+  }
+  const fontkeys=Object.keys(locale[lang]).filter(x=>x.startswith('font.')).map(x=>x.slice(5));
+  for(const key of fontkeys){
+    fonts[lang][key]=[locale[lang]['font.'+key]];
+  }
 }
 
 const outdir=pack.name??'mod';
@@ -516,6 +531,9 @@ fsPromises.mkdir(outdir);
 
 const localedata=JSON.stringify(locale);
 await file.write(path.join(outdir,"locale.json"),localedata);
+
+const fontsdata=JSON.stringify(fonts);
+await file.write(path.join(outdir,"fonts.json"),fontsdata);
 
 fsPromises.rename('assets',path.join(outdir,'assets'));
 fsPromises.rename('data.json',path.join(outdir,'data.json'));
