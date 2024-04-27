@@ -522,7 +522,7 @@ for(const [lang,langfiles] of Object.entries(localefiles)){
   }else{
     fonts[lang]={};
   }
-  const fontkeys=Object.keys(locale[lang]).filter(x=>x.startswith('font.')).map(x=>x.slice(5));
+  const fontkeys=Object.keys(locale[lang]).filter(x=>x.startsWith('font.')).map(x=>x.slice(5));
   for(const key of fontkeys){
     fonts[lang][key]=[locale[lang]['font.'+key]];
   }
