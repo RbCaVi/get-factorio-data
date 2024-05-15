@@ -535,7 +535,7 @@ for(const [lang,langfiles] of Object.entries(localefiles)){
 
 const outdir=pack.name??'mod';
 
-fsPromises.mkdir(outdir);
+await fsPromises.mkdir(outdir);
 
 const localedata=JSON.stringify(locale);
 await file.write(path.join(outdir,"locale.json"),localedata);
