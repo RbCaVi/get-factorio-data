@@ -52,15 +52,13 @@ function newrequire(requiredname)
     required=required:gsub('%.','/') .. '.lua'
   end
   
-  print(modroots['core'] .. '/lualib/' .. required)
+  print('requiring',modroots['core'] .. '/lualib/' .. required)
 
   if required:match('^__.-__/') then
-    print(1)
     local modn,fpath=required:match('^__(.-)__/(.*)')
     modname:push(modn)
     filepath:push(fpath)
   else
-    print(3)
     if filepath:last() then
       local filedir=filepath:last():match("(.-)([^/]-[^%.]+)$")
       if io.open(modroots[modname:last()] .. '/' .. filedir .. '/' .. required, 'r') then
@@ -70,22 +68,20 @@ function newrequire(requiredname)
         modname:push(modname:last())
         filepath:push(required)
       elseif io.open(modroots['core'] .. '/lualib/' .. required, 'r') then
-        print(2)
         modname:push('core')
         filepath:push('lualib/' .. required)
       else
-    print(modname:last(),filepath:last())
+        print(modname:last(),filepath:last())
         error('no module named ' .. required)
       end
     --elseif modname:last() and io.open(modroots[mod]name:last() .. '/' .. required, 'r') then
     --  modname:push(modname:last())
     --  filepath:push(required)
     elseif io.open(modroots['core'] .. '/lualib/' .. required, 'r') then
-      print(2)
       modname:push('core')
       filepath:push('lualib/' .. required)
     else
-    print(modname:last(),filepath:last())
+      print(modname:last(),filepath:last())
       error('no module named ' .. required)
     end
   end
@@ -94,7 +90,7 @@ function newrequire(requiredname)
   local path=modroots[modname:last()] .. '/' .. filepath:last()
   local mkey=path .. '@@' .. modname:last()
   if false and modules[mkey] then
-    print('cached',path)
+    print('using cached',path)
     result=modules[mkey]
   else
     print('requiring',path)
@@ -167,7 +163,7 @@ newenv._G=newenv
 local modinfo={}
 
 for mod,modroot in pairs(modroots) do
-  print(modroot .. '/info.json')
+  print('finding info at',modroot .. '/info.json')
   local f=io.open(modroot .. '/info.json','r')
   local data=f:read('*a')
   f:close()
@@ -236,7 +232,7 @@ while true do
       local valid=true
       for _,dep in pairs(info.dependencies) do
         local depname=getdepname(dep)
-        print(dep,depname)
+        print('dependency',dep,'name',depname)
         if mods[depname] then
           if not sortedmods[depname] then
             valid=false
@@ -272,7 +268,6 @@ end
 
 -- settings stage
 for _,mod in ipairs(deps) do 
-  print(modroots[mod] .. '/settings.lua')
   local f=io.open(modroots[mod] .. '/settings.lua','r')
   if f then
     f:close()
@@ -392,10 +387,10 @@ local settings={}
 settings.startup={}
 
 for _,stype in pairs({'bool','int','double','string','color'}) do
-  print(dataraw)
-  for k,v in pairs(dataraw) do
-    print(k)
-  end
+  -- print(dataraw)
+  -- for k,v in pairs(dataraw) do
+  --   print(k)
+  -- end
   if dataraw[stype .. '-setting'] then
     for settingname,setting in pairs(dataraw[stype .. '-setting']) do
       if setting.setting_type=='startup' then
@@ -406,7 +401,7 @@ for _,stype in pairs({'bool','int','double','string','color'}) do
   end
 end
 
-print(json.encode(settings))
+print('settings:',json.encode(settings))
 
 newenv.settings=settings
 

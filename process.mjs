@@ -231,7 +231,6 @@ await Promise.all([...groupedmods.entries()].map(async ([url,v])=>{
     await unzip.unzip(tempfile,root,unzipto);
     console.log(`unzipped ${tempfile} to ${unzipto} for ${mod}`);
     if(root==""){
-      console.log("unzip to",unzipto);
       const files=(await toArray(await fsPromises.opendir(unzipto))).map(dirent=>dirent.name);
       if(files.length==1){
         fsPromises.rename(path.join(unzipto,files[0]),path.join(unzipto,defaultroot));
@@ -311,27 +310,27 @@ function writedefinesfromapi(defines,prefix,stream) {
 
 try{
   // first try json
-  console.log("trying defines.json");
+  console.log("checking for defines.json");
   const defines=await import("defines.json");
 
   writestream.write("local ");
   writedefinesfromjson(defines.defines,"defines",writestream);
   writestream.write("\n");
-  console.log("defines.json succeeded");
+  console.log("defines.json found");
 }catch{
-  console.log("defines.json failed");
+  console.log("defines.json not found");
   try{
-    console.log("trying defines.lua");
+    console.log("checking for defines.lua");
     // try defines.lua
     // from /c game.write_file("defines.lua", "local defines = " .. serpent.block(defines, {indent="    "}))
     // (command from https://github.com/redruin1/factorio-draftsman/blob/main/draftsman/compatibility/defines.lua)
     await new Promise((resolve,reject)=>{
       const readstream=fs.createReadStream("defines.lua");
       readstream.on("end", function() {
-        console.log("defines.lua succeeded");
+        console.log("defines.lua found");
         resolve();
       }).on("error", async function(err) {
-        console.log("defines.lua failed");
+        console.log("defines.lua not found");
         reject(err);
       }).pipe(writestream,{end:false});
     });
@@ -342,7 +341,7 @@ try{
     // so finally fall back to taking it from the factorio api
     console.log(`getting runtime api for version ${coreversion}`);
     const runtimeapi=await download.downloadjson(`https://lua-api.factorio.com/${coreversion}/runtime-api.json`);
-    console.log(`got runtime api for version ${coreversion}:`,runtimeapi);
+    console.log(`got runtime api for version ${coreversion}`);
 
     writestream.write("local defines={}\n");
     writedefinesfromapi(runtimeapi.defines,"defines",writestream);

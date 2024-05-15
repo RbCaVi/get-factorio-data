@@ -9,7 +9,7 @@ const request=url=>new Promise((resolve,reject)=>{
 
 const requestRedirect=url=>request(url).then(res=>{
   if(res.statusCode==301||res.statusCode==302||res.statusCode==307||res.statusCode==308){
-    console.log("redirected",url,res.statusCode,res.headers.location);
+    console.log("redirected",url,'to',res.headers.location,'with code',res.statusCode);
     return requestRedirect(res.headers.location);
   }
   return res;

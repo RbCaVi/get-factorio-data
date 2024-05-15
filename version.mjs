@@ -14,7 +14,6 @@ function versionConstraint(version,source) {
   // regex time
   //               modifier (?), ?, ~     mod                       inequality              version
   const regex=/^\s*(\?|\(\s*\?\s*\)|~|)\s*([a-zA-Z0-9\-_. ]+?)\s*(?:([><=]=|=[><=]|[><=])\s*(\d+\.\d+(\.\d+)?))?\s*$/;
-  console.log(version);
   const [,modifier,mod,ineq,versionnum]=regex.exec(version);
 
   if(modifier.includes("?")){
@@ -129,7 +128,7 @@ class VersionConstraint{
         }
       }
     }else{
-      console.log('releases',this.mod,data.releases)
+      //console.log('releases',this.mod,data.releases) // really long
       for(let {version:version,info_json:{dependencies:deps}} of data.releases){
         //console.log('does',this,'include',version);
         //console.log(this.includes(version))
