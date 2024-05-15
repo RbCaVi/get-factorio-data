@@ -429,7 +429,7 @@ await Promise.all(modlocations.map(([,,,mod,version])=>({
   version,
   modroot:(mod=="base"||mod=="core")?`${factorioroot}/data/${mod}`:modroots[mod]
 })).map(async ({mod,version,modroot})=>{
-  if(pack[mod].assets == false) { // default true
+  if(pack.mods[mod].assets == false) { // default true
     return;
   }
   const outdir=`assets/${mod}`; // sejs isn't built for mod_version yet
