@@ -130,6 +130,9 @@ const modlocations=await run(pack);
 //let modlocationsdata=JSON.stringify(modlocations);
 //await file.write('modlocations.json',modlocationsdata);
 
+function getmoddata(mod) {
+  return pack.mods[mod] ?? {"assets":true};
+}
 
 const factorioroot=(await file.read("factorioroot.txt")).trim();
 
@@ -429,7 +432,7 @@ await Promise.all(modlocations.map(([,,,mod,version])=>({
   version,
   modroot:(mod=="base"||mod=="core")?`${factorioroot}/data/${mod}`:modroots[mod]
 })).map(async ({mod,version,modroot})=>{
-  if(pack.mods[mod].assets == false) { // default true
+  if(getmoddata(mod).assets == false) { // default true
     return;
   }
   const outdir=`assets/${mod}`; // sejs isn't built for mod_version yet
