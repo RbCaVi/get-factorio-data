@@ -483,7 +483,9 @@ for(const [mod,croot] of Object.entries(modroots)){
             localefiles[lang].push(path.join(root,"locale",lang,localeentry.name));
           }
           if(localeentry.name=='info.json'){
-            localeinfos[lang]=path.join(root,"locale",lang,localeentry.name);
+            const data = await file.read(path.join(root,"locale",lang,localeentry.name));
+            const localeinfo = JSON.parse(data);
+            localeinfos[lang] = localeinfo;
           }
         }
       }catch{}
@@ -522,6 +524,7 @@ for(const [lang,langfiles] of Object.entries(localefiles)){
       }
     }
   }
+  // console.log(localeinfos[lang]);
   if(localeinfos[lang]?.font!=undefined){
     fonts[lang]=localeinfos[lang].font;
   }else{
