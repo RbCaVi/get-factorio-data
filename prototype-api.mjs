@@ -56,25 +56,92 @@ for (const [prototypename,parents] of Object.entries(parentchains)) {
 
 //console.log(lists);
 
+const needsnormalize = {};
+
 function normalize(prototypename) {
 	console.log(prototypename);
 	const prototype = namedprototypes[prototypename];
-	console.log('parent',prototype.parent);
-	console.log('abstract',prototype.abstract);
-	console.log('typename',prototype.typename);
-	console.log('instance_limit',prototype.instance_limit);
-	for (const property of prototype.properties) {
-		console.log('property',property.name,property.alt_name,property.override,property.type);
-		if (property.optional){
-			console.log('  optional');
-			if (property.default != undefined) {
-				console.log('    default',property.default);
+	console.log('  parent',prototype.parent);
+	if (prototype.abstract) {
+		console.log('  abstract');
+	} else {
+		console.log('  typename',prototype.typename);
+	}
+	console.log('  instance_limit',prototype.instance_limit);
+	console.log('  properties');
+	const overridden = {};
+	for (const parent of parentchains[prototypename]) {
+		for (const property of namedprototypes[parent].properties) {
+			console.log('    property',property.name+(property.alt_name?' / '+property.alt_name:''),'from',parent);
+			if (property.name in overridden) {
+				console.log('      overridden');
+				continue;
+			}
+			console.log('      type',property.type);
+			if (property.override){
+				console.log('      override');
+				overridden[property.name] = true;
+			}
+			if (property.optional){
+				console.log('      optional');
+				if (property.default != undefined) {
+					console.log('        default',property.default);
+				}
 			}
 		}
 	}
-	console.log('custom_properties',prototype.custom_properties);
+	if (prototype.custom_properties) {
+		console.log('  custom_properties');
+		console.log('    key',prototype.custom_properties.key_type);
+		console.log('    value',prototype.custom_properties.value_type);
+	}
 }
 
-normalize('PrototypeBase');
+function checktypenormalize(typename) {
+	// body...
+}
+
+function checknormalize(prototypename) {
+	const prototype = namedprototypes[prototypename];
+	if (prototype.abstract) {
+		return false;
+	}
+	const overridden = {};
+	for (const parent of parentchains[prototypename]) {
+		for (const property of namedprototypes[parent].properties) {
+			if (property.name in overridden) {
+				continue;
+			}
+			if (checktypenormalize(property.type)) {
+				return true;
+			}
+			if (property.override){
+				overridden[property.name] = true;
+			}
+			if (property.optional){
+				if (property.default != undefined) {
+					console.log('default',prototypename,property.default);
+					return true;
+				}
+			}
+		}
+	}
+	if (prototype.custom_properties) {
+		if (checktypenormalize(prototype.custom_properties.key_type)) {
+			return true;
+		}
+		if (checktypenormalize(prototype.custom_properties.value_type)) {
+			return true;
+		}
+	}
+}
+
+normalize('GuiStyle');
+
+for (const prototypename of Object.keys(namedprototypes)) {
+	if (checknormalize(prototypename)) {
+		console.log(prototypename);
+	}
+}
 
 export {namedprototypes,lists,normalize};
