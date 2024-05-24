@@ -58,7 +58,23 @@ for (const [prototypename,parents] of Object.entries(parentchains)) {
 
 function normalize(prototypename) {
 	console.log(prototypename);
-	console.log(namedprototypes[prototypename]);
+	const prototype = namedprototypes[prototypename];
+	console.log('parent',prototype.parent);
+	console.log('abstract',prototype.abstract);
+	console.log('typename',prototype.typename);
+	console.log('instance_limit',prototype.instance_limit);
+	for (const property of prototype.properties) {
+		console.log('property',property.name,property.alt_name,property.override,property.type);
+		if (property.optional){
+			console.log('  optional');
+			if (property.default != undefined) {
+				console.log('    default',property.default);
+			}
+		}
+	}
+	console.log('custom_properties',prototype.custom_properties);
 }
 
-normalize('EntityPrototype');
+normalize('PrototypeBase');
+
+export {namedprototypes,lists,normalize};
