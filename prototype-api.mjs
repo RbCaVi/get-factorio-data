@@ -33,3 +33,25 @@ for (const prototypename of Object.keys(namedprototypes)) {
 }
 
 console.log(parentchains);
+
+const listprototypes = {
+	itemtypes:'ItemPrototype',
+	equipmenttypes:'EquipmentPrototype',
+	entitytypes:'EntityPrototype',
+};
+
+const lists = {};
+
+for (const [listname,prototypename] of Object.entries(listprototypes)) {
+	lists[listname] = [];
+}
+
+for (const [prototypename,parents] of Object.entries(parentchains)) {
+	for (const [listname,ancestorprototypename] of Object.entries(listprototypes)) {
+		if ((!namedprototypes[prototypename].abstract) && parents.includes(ancestorprototypename)) {
+			lists[listname].push(namedprototypes[prototypename].typename);
+		}
+	}
+}
+
+console.log(lists);
