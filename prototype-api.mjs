@@ -32,9 +32,9 @@ for (const prototypename of Object.keys(namedprototypes)) {
 	}
 }
 
-console.log(parentchains);
+//console.log(parentchains);
 
-const listprototypes = {
+const listprototypes = { // i sure hope this code won't be looked at by generations to come and ridiculed for bad naming
 	itemtypes:'ItemPrototype',
 	equipmenttypes:'EquipmentPrototype',
 	entitytypes:'EntityPrototype',
@@ -54,4 +54,4 @@ for (const [prototypename,parents] of Object.entries(parentchains)) {
 	}
 }
 
-console.log(lists);
+//console.log(lists);
