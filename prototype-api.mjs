@@ -55,3 +55,10 @@ for (const [prototypename,parents] of Object.entries(parentchains)) {
 }
 
 //console.log(lists);
+
+function normalize(prototypename) {
+	console.log(prototypename);
+	console.log(namedprototypes[prototypename]);
+}
+
+normalize('EntityPrototype');
