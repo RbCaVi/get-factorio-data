@@ -6,6 +6,7 @@ const api=JSON.parse(apidata);
 const parents = {}; // child:parent
 
 const namedprototypes = {}; // name:prototype
+const namedtypes = {}; // name:type
 
 for (const prototype of api.prototypes) {
 	//console.log(prototype);
@@ -19,6 +20,14 @@ for (const prototype of api.prototypes) {
 	}
 	namedprototypes[prototype.name] = prototype;
 	parents[prototype.name] = prototype.parent;
+}
+
+for (const type of api.types) {
+	//console.log(prototype);
+	if (type.name in namedtypes) {
+		throw 'duplicate type';
+	}
+	namedtypes[type.name] = type;
 }
 
 const parentchains = {};
@@ -97,8 +106,77 @@ function normalize(prototypename) {
 	}
 }
 
-function checktypenormalize(typename) {
-	// body...
+function checkTypenormalize(typename) {
+	//console.log('type',typename);
+	const type = namedtypes[typename];
+	if (type.abstract) {
+		return false;
+	}
+	if (type.type == 'builtin') {
+		//console.log('  builtin');
+		return false;
+	}
+	let out = false;
+	//console.log('  type',type.type);
+	let pname = typename;
+	const overridden = {};
+	while (pname) {
+		if (namedtypes[pname].properties) {
+			for (const property of namedtypes[pname].properties) {
+				if (property.name in overridden) {
+					continue;
+				}
+				if (checktypenormalize(property.type,typename)) {
+					console.log('  normalize member',typename,property.name,'of type',property.type);
+					out = true;
+				}
+				if (property.override){
+					overridden[property.name] = true;
+				}
+				if (property.optional){
+					if (property.default != undefined) {
+						//console.log('  default on',typename,property.name,'=',property.default);
+						if (typeof property.default == 'string') {
+							console.log('  default with desc on',typename,property.name,'=',property.default);
+						} else if (property.default.complex_type == 'literal') {
+							//console.log('  default literal on',typename,property.name,'=',property.default.value);
+						}
+						out = true;
+					}
+				}
+			}
+		}
+		pname = namedtypes[pname].parent;
+	}
+	//console.log('  abstract',type.abstract);
+	//console.log('  properties',type.properties);
+	return out;
+}
+
+function checktypenormalize(type,uptype) {
+	//console.log(type);
+	if (typeof type == 'string') {
+		if (type == uptype) {
+			return false;
+		}
+		return checkTypenormalize(type);
+	}
+	switch (type.complex_type) {
+	case 'array':
+		return checktypenormalize(type.value,uptype);
+	case 'dictionary':
+		return checktypenormalize(type.key,uptype) && checktypenormalize(type.value,uptype);
+	case 'tuple':
+		return type.values.every(checktypenormalize,uptype);
+	case 'union':
+		return type.options.every(checktypenormalize,uptype);
+	case 'literal':
+		return false;
+	case 'type':
+		return checktypenormalize(type.type,uptype);
+	case 'struct':
+		return false;
+	}
 }
 
 function checknormalize(prototypename) {
@@ -115,12 +193,18 @@ function checknormalize(prototypename) {
 			if (checktypenormalize(property.type)) {
 				return true;
 			}
-			if (property.override){
+			if (property.override) {
 				overridden[property.name] = true;
 			}
-			if (property.optional){
+			if (property.optional) {
 				if (property.default != undefined) {
-					console.log('default',prototypename,property.default);
+					if (property.default != undefined) {
+						if (typeof property.default == 'string') {
+							console.log('default with desc on',prototypename,property.name,'=',property.default);
+						} else if (property.default.complex_type == 'literal') {
+							//console.log('default literal on',prototypename,property.name,'=',property.default.value);
+						}
+					}
 					return true;
 				}
 			}
@@ -141,6 +225,13 @@ normalize('GuiStyle');
 for (const prototypename of Object.keys(namedprototypes)) {
 	if (checknormalize(prototypename)) {
 		console.log(prototypename);
+	}
+}
+
+for (const typename of Object.keys(namedtypes)) {
+	//console.log('typetype',typename);
+	if (checkTypenormalize(typename)) {
+		console.log(typename);
 	}
 }
 
