@@ -127,7 +127,7 @@ function checkTypenormalize(typename) {
 					continue;
 				}
 				if (checktypenormalize(property.type,typename)) {
-					console.log('  normalize member',typename,property.name,'of type',property.type);
+					//console.log('  normalize member',typename,property.name,'of type',property.type);
 					out = true;
 				}
 				if (property.override){
@@ -137,10 +137,10 @@ function checkTypenormalize(typename) {
 					if (property.default != undefined) {
 						//console.log('  default on',typename,property.name,'=',property.default);
 						if (typeof property.default == 'string') {
-							console.log('  default with desc on',typename,property.name,'=',property.default);
+							//console.log('  default with desc on',typename,property.name,'=',property.default);
 						} else if (property.default.complex_type == 'literal') {
 							//console.log('  default literal on',typename,property.name,'=',property.default.value);
-						}
+						}  // only 2 cases string or literal
 						out = true;
 					}
 				}
@@ -200,7 +200,7 @@ function checknormalize(prototypename) {
 				if (property.default != undefined) {
 					if (property.default != undefined) {
 						if (typeof property.default == 'string') {
-							console.log('default with desc on',prototypename,property.name,'=',property.default);
+							//console.log('default with desc on',prototypename,property.name,'=',property.default);
 						} else if (property.default.complex_type == 'literal') {
 							//console.log('default literal on',prototypename,property.name,'=',property.default.value);
 						}
@@ -220,18 +220,93 @@ function checknormalize(prototypename) {
 	}
 }
 
-normalize('GuiStyle');
+function typenormalizecode(type,uptype) {
+	//console.log(type);
+	if (typeof type == 'string') {
+		if (type == uptype) {
+			return false;
+		}
+		return checkTypenormalize(type);
+	}
+	switch (type.complex_type) {
+	case 'array':
+		return checktypenormalize(type.value,uptype);
+	case 'dictionary':
+		return checktypenormalize(type.key,uptype) && checktypenormalize(type.value,uptype);
+	case 'tuple':
+		return type.values.every(checktypenormalize,uptype);
+	case 'union':
+		for (const subtype of type.options) {
+			
+		}
+		return type.options.every(checktypenormalize,uptype);
+	case 'literal':
+		return;
+	case 'type':
+		typenormalizecode(type.type,uptype);
+	case 'struct':
+		if (uptype == undefined) {
+			throw 'no uptype';
+		}
+	}
+}
+
+function normalizecode(prototypename) {
+	const prototype = namedprototypes[prototypename];
+	if (prototype.abstract) {
+		return;
+	}
+	const overridden = {};
+	for (const parent of parentchains[prototypename]) {
+		for (const property of namedprototypes[parent].properties) {
+			if (property.name in overridden) {
+				continue;
+			}
+			if (checktypenormalize(property.type)) {
+				return true;
+				typenormalizecode(property.type);
+			}
+			if (property.override) {
+				overridden[property.name] = true;
+			}
+			if (property.optional) {
+				if (property.default != undefined) {
+					if (property.default != undefined) {
+						if (typeof property.default == 'string') {
+							console.log(`  ${property.name} = ; // ${property.default}`);
+							//console.log('default with desc on',prototypename,property.name,'=',property.default);
+						} else if (property.default.complex_type == 'literal') {
+							console.log(`  ${property.name} = ${property.default.value};`);
+							//console.log('default literal on',prototypename,property.name,'=',property.default.value);
+						}
+					}
+				}
+			}
+		}
+	}
+	if (prototype.custom_properties) {
+		if (checktypenormalize(prototype.custom_properties.key_type)) {
+			return true;
+		}
+		if (checktypenormalize(prototype.custom_properties.value_type)) {
+			return true;
+		}
+	}
+}
 
 for (const prototypename of Object.keys(namedprototypes)) {
 	if (checknormalize(prototypename)) {
-		console.log(prototypename);
+		//console.log(prototypename);
 	}
 }
+
+const typesnormalize = {};
 
 for (const typename of Object.keys(namedtypes)) {
 	//console.log('typetype',typename);
 	if (checkTypenormalize(typename)) {
-		console.log(typename);
+		typesnormalize[typename] = true;
+		//console.log(typename);
 	}
 }
 
