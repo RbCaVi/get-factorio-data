@@ -18,3 +18,10 @@ ultracube/
 
 # node
 node_modules/
+package-lock.json
+
+# intermediate files
+nulliuslocale.json
+nulliusdata.json
+nulliusprocesseddata.json
+prototype-api.json
