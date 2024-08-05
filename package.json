@@ -19,5 +19,9 @@
   "bugs": {
     "url": "https://github.com/RbCaVi/lua-factorio-data/issues"
   },
-  "homepage": "https://github.com/RbCaVi/lua-factorio-data#readme"
+  "homepage": "https://github.com/RbCaVi/lua-factorio-data#readme",
+  "dependencies": {
+    "canvas": "^2.11.2",
+    "yauzl": "^3.1.3"
+  }
 }

@@ -15,3 +15,6 @@ fonts.json
 
 # ultrceub
 ultracube/
+
+# node
+node_modules/
