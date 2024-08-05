@@ -311,7 +311,7 @@ function writedefinesfromapi(defines,prefix,stream) {
 try{
   // first try json
   console.log("checking for defines.json");
-  const defines=await import("defines.json");
+  const defines=await read("defines.json").then(JSON.parse);
 
   writestream.write("local ");
   writedefinesfromjson(defines.defines,"defines",writestream);
