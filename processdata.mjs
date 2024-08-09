@@ -36,17 +36,17 @@ const itemtypes = [
 processed.item = {};
 
 function getitemproductdata(item_product) {
-	if (typeof item_product == 'object'){
+	if (Array.isArray(item_product)){
+		return {
+			item: item_product[0],
+			amount: item_product[1],
+		};
+	} else {
 		const min_amount = item_product.amount ?? item_product.amount_min;
 		const max_amount = item_product.amount ?? Math.max(item_product.amount_max, item_product.amount_min);
 		return {
 			item: item_product.name,
 			amount: (item_product.probability ?? 1) * (min_amount + max_amount) / 2,
-		};
-	} else {
-		return {
-			item: item_product[0],
-			amount: item_product[1],
 		};
 	}
 }
@@ -67,7 +67,63 @@ function getenergyamount(energy) {
 	}[multiplier];
 }
 
-// hehehe
+function fixcolor(color) {
+	// changes to [r, g, b, a] 0-255 format
+	let r, g, b, a;
+	if (Array.isArray(color)) {
+		[r, g, b, a] = color;
+	} else {
+		{r, g, b, a} = color;
+		r = r ?? 0;
+		g = g ?? 0;
+		b = b ?? 0;
+	}
+	if (a == undefined) {
+		if (r <= 1 && g <= 1 && b <= 1) {
+			r *= 255;
+			g *= 255;
+			b *= 255;
+		}
+		a = 255;
+	} else {
+		if (r <= 1 && g <= 1 && b <= 1 && a <= 1) {
+			r *= 255;
+			g *= 255;
+			b *= 255;
+			a *= 255;
+		}
+	}
+	return [r, g, b, a];
+}
+
+function geticons(thing, defaultsize) {
+	const icons = [];
+	if (thing.icons != undefined) {
+		const default_icon_size = thing.icon_size;
+		for (const icon of thing.icons) {
+			icons.push({
+				icon: icon.icon,
+				icon_size: icon.icon_size ?? default_icon_size,
+				tint: fixcolor(icon.tint ?? [1, 1, 1, 1]), // no tint
+				shift: icon.shift ?? [0, 0],
+				scale: icon.scale ?? (defaultsize / (icon.icon_size ?? default_icon_size)),
+				icon_mipmaps: icon.icon_mipmaps ?? 1,
+			});
+		}
+	} else {
+		icons.push({
+			icon: thing.icon,
+			icon_size: thing.icon_size,
+			tint: fixcolor([1, 1, 1, 1]), // no tint
+			shift: [0, 0],
+			scale: defaultsize / thing.icon_size,
+			icon_mipmaps: thing.icon_mipmaps ?? 1,
+		});
+	}
+	return icons;
+}
+
+// hehehe three nested control flow statements
 for (const itemtype of itemtypes) if (data[itemtype] != undefined) for (const item of Object.values(data[itemtype])) {
 	const pitem = {};
 	// do some stuff
@@ -78,30 +134,7 @@ for (const itemtype of itemtypes) if (data[itemtype] != undefined) for (const it
 	// stack size
 	pitem.stack_size = item.stack_size; // must be 1 if flags.includes('not-stackable') - i won't check it though
 	// icon
-	if (item.icons != undefined) {
-		const default_icon_size = item.icon_size;
-		const icons = [];
-		for (const icon of item.icons) {
-			icons.push({
-				icon: icon.icon,
-				icon_size: icon.icon_size ?? default_icon_size,
-				tint: icon.tint ?? [1, 1, 1, 1], // no tint
-				shift: icon.shift ?? [0, 0],
-				scale: icon.scale ?? (32 / (icon.icon_size ?? default_icon_size)), // 256 for tech
-				icon_mipmaps: icon.icon_mipmaps ?? 0,
-			});
-		}
-		pitem.icons = icons;
-	} else {
-		pitem.icons = [{
-			icon: item.icon,
-			icon_size: item.icon_size,
-			tint: [1, 1, 1, 1], // no tint
-			shift: [0, 0],
-			scale: 32 / item.icon_size,
-			icon_mipmaps: item.icon_mipmaps ?? 0,
-		}];
-	}
+	pitem.icons = geticons(item);
 	// place entity tile equipment
 	if (item.place_result == '' || item.place_result == undefined) {
 		pitem.entity = null;
@@ -124,7 +157,7 @@ for (const itemtype of itemtypes) if (data[itemtype] != undefined) for (const it
 	// fuel
 	if (item.fuel_value != undefined) {
 		// gonna ignore the note that says fuel energy is required if the fuel attributes are there
-		const fuel = {
+		pitem.fuel = {
 			energy: getenergyamount(item.fuel_value),
 			burnt: item.burnt_result ?? null,
 			category: item.fuel_category,
@@ -132,7 +165,6 @@ for (const itemtype of itemtypes) if (data[itemtype] != undefined) for (const it
 			speed_boost: item.fuel_top_speed_multiplier ?? 1,
 			emission: item.fuel_emissions_multiplier ?? 1,
 		};
-		pitem.fuel = fuel;
 	} else {
 		pitem.fuel = null;
 	}
@@ -157,7 +189,7 @@ for (const itemtype of itemtypes) if (data[itemtype] != undefined) for (const it
 		name: null,
 		description: null
 	};
-	// order?
+	// order
 	pitem.order = item.order;
 	processed.item[item.name] = pitem;
 }
