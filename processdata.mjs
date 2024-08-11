@@ -73,10 +73,7 @@ function fixcolor(color) {
 	if (Array.isArray(color)) {
 		[r, g, b, a] = color;
 	} else {
-		({r, g, b, a} = color);
-		r = r ?? 0;
-		g = g ?? 0;
-		b = b ?? 0;
+		({r = 0, g = 0, b = 0, a} = color);
 	}
 	if (a == undefined) {
 		if (r <= 1 && g <= 1 && b <= 1) {
