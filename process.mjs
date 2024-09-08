@@ -280,7 +280,7 @@ const writestreamfd=new Promise((res)=>writestream.on('open',res));
 function writedefinesfromjson(defines,prefix,stream) {
   stream.write(`${prefix}={}\n`);
   for(const [name,value] of defines){
-    const subprefix=prefix+"."+name;
+    const subprefix=prefix+"['"+name+"']";
     if(typeof value=="object"){
       writedefinesfromjson(value,subprefix,stream);
     }else{
@@ -292,11 +292,11 @@ function writedefinesfromjson(defines,prefix,stream) {
 function writedefinesfromapi(defines,prefix,stream) {
   //console.log("defines are",defines);
   for(const define of defines){
-    const subprefix=prefix+"."+define.name;
+    const subprefix=prefix+"['"+define.name+"']";
     stream.write(`${subprefix}={}\n`);
     if("values" in define){
       for(const {name} of define.values){
-        const valuename=subprefix+"."+name;
+        const valuename=subprefix+"['"+name+"']";
         stream.write(`${valuename}="${valuename}"\n`);
         // like i could do it in numeric order like the actual defines
         // but there are special cases i don't want to handle
